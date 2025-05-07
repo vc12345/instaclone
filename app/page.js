@@ -60,7 +60,11 @@ export default function Home() {
           />
           <input type="file" onChange={(e) => setImage(e.target.files[0])} />
           <button type="submit">Upload</button>
-          <Link href="/my-posts">My Posts</Link>
+          <div className="mt-8">
+      <Link href="/my-posts" className="text-blue-500 underline">
+        My Posts
+      </Link>
+    </div>
         </form>
       )}
 
