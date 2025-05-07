@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useSession, signIn, signOut } from "next-auth/react";
+import Link from "next/link";
 
 export default function Home() {
   const { data: session } = useSession();
@@ -59,6 +60,7 @@ export default function Home() {
           />
           <input type="file" onChange={(e) => setImage(e.target.files[0])} />
           <button type="submit">Upload</button>
+          <Link href="/my-posts">My Posts</Link>
         </form>
       )}
 
@@ -73,9 +75,4 @@ export default function Home() {
     </div>
   );
 }
-
-import Link from "next/link";
-
-<Link href="/my-posts">My Posts</Link>
-
 
