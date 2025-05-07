@@ -74,4 +74,8 @@ export default function Home() {
   );
 }
 
+import Link from "next/link";
+
+<Link href="/my-posts">My Posts</Link>
+
 
