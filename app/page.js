@@ -61,21 +61,22 @@ export default function Home() {
           <input type="file" onChange={(e) => setImage(e.target.files[0])} />
           <button type="submit">Upload</button>
           <div className="mt-8">
-      <Link href="/my-posts" className="text-blue-500 underline">
-        My Posts
-      </Link>
-    </div>
+            <Link href="/my-posts" className="text-blue-500 underline">
+              My Posts
+            </Link>
+          </div>
         </form>
       )}
 
       <div>
-        {posts.map((post) => (
-          <div key={post._id}>
-            <img src={post.imageUrl} alt="post" width="300" />
-            <p>{post.caption}</p>
-          </div>
-        ))}
+      {posts.length === 0 && <p>No posts yet.</p>}
+      {posts.map((post) => (
+        <div key={post._id} className="mb-6">
+          <img src={post.imageUrl} alt={post.caption} className="w-full max-w-sm" />
+          <p>{post.caption}</p>
+        </div>
       </div>
+    
     </div>
   );
 }
