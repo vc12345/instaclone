@@ -39,4 +39,19 @@ export async function POST(req) {
   return new Response("Success", { status: 200 });
 }
 
+// GET = Fetch all posts
+export async function GET() {
+    const client = await clientPromise;
+    const db = client.db("instagram");
+  
+    const posts = await db
+      .collection("posts")
+      .find({})
+      .sort({ createdAt: -1 })
+      .toArray();
+  
+    return new Response(JSON.stringify(posts), {
+      headers: { "Content-Type": "application/json" },
+    });
+  }
 
