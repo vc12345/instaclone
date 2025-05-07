@@ -59,7 +59,7 @@ export default function Home() {
             placeholder="Write a caption..."
           />
           <input type="file" onChange={(e) => setImage(e.target.files[0])} />
-          <button type="submit">Upload</button />
+          <button type="submit">Upload</button>
           <Link href="/my-posts">My Posts</Link>
         </form>
       )}
