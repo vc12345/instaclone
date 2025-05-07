@@ -1,22 +1,42 @@
-import { getServerSession } from "next-auth";
-import { authOptions } from "../api/auth/[...nextauth]/route";
-import clientPromise from "@/lib/mongodb";
+"use client";
+import { useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
 
-export default async function MyPostsPage() {
-  const session = await getServerSession(authOptions);
+export default function MyPostsPage() {
+  const { data: session, status } = useSession();
+  const [posts, setPosts] = useState([]);
 
-  if (!session) {
-    return <p>You must be logged in to see your posts.</p>;
-  }
+  const fetchPosts = async () => {
+    const res = await fetch("/api/posts");
+    const allPosts = await res.json();
+    const myPosts = allPosts.filter(
+      (post) => post.userEmail === session?.user?.email
+    );
+    setPosts(myPosts);
+  };
 
-  const client = await clientPromise;
-  const db = client.db("instagram");
+  useEffect(() => {
+    if (session) {
+      fetchPosts();
+    }
+  }, [session]);
 
-  const posts = await db
-    .collection("posts")
-    .find({ userEmail: session.user.email })
-    .sort({ createdAt: -1 })
-    .toArray();
+  const handleDelete = async (id) => {
+    if (!confirm("Are you sure you want to delete this post?")) return;
+
+    await fetch("/api/posts", {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ id }),
+    });
+
+    fetchPosts();
+  };
+
+  if (status === "loading") return <p>Loading...</p>;
+  if (!session) return <p>You must be logged in to see your posts.</p>;
 
   return (
     <div>
@@ -26,6 +46,12 @@ export default async function MyPostsPage() {
         <div key={post._id} className="mb-6">
           <img src={post.imageUrl} alt={post.caption} className="w-full max-w-sm" />
           <p>{post.caption}</p>
+          <button
+            onClick={() => handleDelete(post._id)}
+            className="text-red-500 mt-2 underline"
+          >
+            Delete
+          </button>
         </div>
       ))}
     </div>

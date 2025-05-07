@@ -2,6 +2,7 @@ import clientPromise from "@/lib/mongodb";
 import cloudinary from "@/lib/cloudinary";
 import { getServerSession } from "next-auth";
 import { authOptions } from "../auth/[...nextauth]/route";
+import { ObjectId } from "mongodb";
 
 export async function POST(req) {
   const session = await getServerSession(authOptions);
@@ -55,3 +56,18 @@ export async function GET() {
     });
   }
 
+
+
+// DELETE = Remove a post
+export async function DELETE(req) {
+  const { id } = await req.json();
+
+  const client = await clientPromise;
+  const db = client.db("instagram");
+
+  const result = await db.collection("posts").deleteOne({ _id: new ObjectId(id) });
+
+  return new Response(JSON.stringify({ success: result.deletedCount === 1 }), {
+    headers: { "Content-Type": "application/json" },
+  });
+}
