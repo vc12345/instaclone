@@ -24,7 +24,7 @@ export const authOptions = {
       },
       async authorize(credentials) {
         const client = await clientPromise;
-        const db = client.db("instagram");
+        const db = client.db("instaclone");
         const user = await db.collection("users").findOne({ email: credentials.email });
 
         if (!user) throw new Error("No user found");
