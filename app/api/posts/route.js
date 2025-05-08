@@ -34,6 +34,7 @@ export async function POST(req) {
     caption: data.get("caption"),
     imageUrl: uploadResult.secure_url,
     createdAt: new Date(),
+    username: user.username,
     userEmail: session.user.email, // 👈 important!
   });
 
