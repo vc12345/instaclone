@@ -6,6 +6,19 @@ import clientPromise from "@/lib/mongodb";
 import { MongoDBAdapter } from "@auth/mongodb-adapter";
 import bcrypt from "bcrypt";
 
+// Function to generate camelCased username from a name
+function toCamelCase(name) {
+  return name
+    .toLowerCase()
+    .replace(/[^a-zA-Z0-9 ]/g, "") // remove special chars
+    .split(" ")
+    .filter(Boolean)
+    .map((word, index) =>
+      index === 0 ? word : word[0].toUpperCase() + word.slice(1)
+    )
+    .join("");
+}
+
 export const authOptions = {
   adapter: MongoDBAdapter(clientPromise),
   session: {
@@ -45,15 +58,38 @@ export const authOptions = {
   },
   callbacks: {
     async signIn({ user, account }) {
+      const client = await clientPromise;
+      const db = client.db("instaclone");
+
       // Only restrict email check for OAuth (Google) sign-in
       if (account?.provider === "google") {
-        const client = await clientPromise;
-        const db = client.db("instaclone");
-
         const allowed = await db.collection("allowedEmails").findOne({ email: user.email });
         if (!allowed) {
           console.log(`Blocked Google login for unapproved email: ${user.email}`);
           return false; // Deny login
+        }
+
+        // If the user doesn't exist in the DB, create a new one with a camelCase username
+        const existingUser = await db.collection("users").findOne({ email: user.email });
+        if (!existingUser) {
+          const baseUsername = toCamelCase(user.name || user.email.split("@")[0]);
+          let username = baseUsername;
+          let count = 1;
+
+          // Ensure the username is unique
+          while (await db.collection("users").findOne({ username })) {
+            username = `${baseUsername}${count}`;
+            count++;
+          }
+
+          // Create the user with the generated username
+          await db.collection("users").insertOne({
+            email: user.email,
+            username,
+            name: user.name,
+            image: user.image,
+            createdAt: new Date(),
+          });
         }
       }
 
