@@ -17,7 +17,7 @@ export default function Home() {
 
   useEffect(() => {
     fetchPosts();
-  }, [fetchPosts]);
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
