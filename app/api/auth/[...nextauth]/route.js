@@ -49,7 +49,12 @@ export const authOptions = {
         const isValid = await bcrypt.compare(credentials.password, user.password);
         if (!isValid) throw new Error("Incorrect password");
 
-        return { id: user._id, name: user.name || user.email, email: user.email };
+        return {
+          id: user._id,
+          name: user.name || user.email,
+          email: user.email,
+          username: user.username || toCamelCase(user.name || user.email),
+        };
       },
     }),
   ],
@@ -69,20 +74,18 @@ export const authOptions = {
           return false; // Deny login
         }
 
-        // If the user doesn't exist in the DB, create a new one with a camelCase username
+        // If user not in DB, create with generated username
         const existingUser = await db.collection("users").findOne({ email: user.email });
         if (!existingUser) {
           const baseUsername = toCamelCase(user.name || user.email.split("@")[0]);
           let username = baseUsername;
           let count = 1;
 
-          // Ensure the username is unique
           while (await db.collection("users").findOne({ username })) {
             username = `${baseUsername}${count}`;
             count++;
           }
 
-          // Create the user with the generated username
           await db.collection("users").insertOne({
             email: user.email,
             username,
@@ -90,10 +93,29 @@ export const authOptions = {
             image: user.image,
             createdAt: new Date(),
           });
+
+          // Attach username to the user object
+          user.username = username;
+        } else {
+          user.username = existingUser.username;
         }
       }
 
-      return true; // Allow login
+      return true;
+    },
+
+    async jwt({ token, user }) {
+      if (user) {
+        token.username = user.username;
+      }
+      return token;
+    },
+
+    async session({ session, token }) {
+      if (token?.username) {
+        session.user.username = token.username;
+      }
+      return session;
     },
   },
 };
