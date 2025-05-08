@@ -28,7 +28,7 @@ export async function POST(req) {
   });
 
   const client = await clientPromise;
-  const db = client.db("instagram");
+  const db = client.db("instaclone");
 
   await db.collection("posts").insertOne({
     caption: data.get("caption"),
@@ -44,7 +44,7 @@ export async function POST(req) {
 // GET = Fetch all posts
 export async function GET() {
     const client = await clientPromise;
-    const db = client.db("instagram");
+    const db = client.db("instaclone");
   
     const posts = await db
       .collection("posts")
@@ -64,7 +64,7 @@ export async function DELETE(req) {
   const { id } = await req.json();
 
   const client = await clientPromise;
-  const db = client.db("instagram");
+  const db = client.db("instaclone");
 
   const result = await db.collection("posts").deleteOne({ _id: new ObjectId(id) });
 
