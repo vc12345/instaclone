@@ -25,9 +25,14 @@ export const authOptions = {
       async authorize(credentials) {
         const client = await clientPromise;
         const db = client.db("instaclone");
-        const user = await db.collection("users").findOne({ email: credentials.email });
 
+        // Check if email is allowed
+        const allowed = await db.collection("allowedEmails").findOne({ email: credentials.email });
+        if (!allowed) throw new Error("Email not authorized");
+
+        const user = await db.collection("users").findOne({ email: credentials.email });
         if (!user) throw new Error("No user found");
+
         const isValid = await bcrypt.compare(credentials.password, user.password);
         if (!isValid) throw new Error("Incorrect password");
 
@@ -36,10 +41,26 @@ export const authOptions = {
     }),
   ],
   pages: {
-    signIn: "/login", // we'll create this
+    signIn: "/login", // custom login page (optional)
+  },
+  callbacks: {
+    async signIn({ user, account }) {
+      // Only restrict email check for OAuth (Google) sign-in
+      if (account?.provider === "google") {
+        const client = await clientPromise;
+        const db = client.db("instaclone");
+
+        const allowed = await db.collection("allowedEmails").findOne({ email: user.email });
+        if (!allowed) {
+          console.log(`Blocked Google login for unapproved email: ${user.email}`);
+          return false; // Deny login
+        }
+      }
+
+      return true; // Allow login
+    },
   },
 };
 
 const handler = NextAuth(authOptions);
 export { handler as GET, handler as POST };
-
