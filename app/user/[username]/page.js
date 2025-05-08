@@ -1,4 +1,5 @@
 import clientPromise from "@/lib/mongodb";
+import Link from 'next/link';
 
 export default async function UserProfile({ params }) {
   const { username } = params;
@@ -10,7 +11,7 @@ export default async function UserProfile({ params }) {
   if (!user) return (
     <div>
       <p>User not found.</p>
-      <a href="/" className="text-blue-500 underline">Go back to home</a>
+      <Link href="/" className="text-blue-500 underline">Go back to home</Link>
     </div>
   );
 
