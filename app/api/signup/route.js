@@ -23,5 +23,6 @@ export async function POST(req) {
   await db.collection("users").insertOne({ email, password: hashed, name });
 
   return new Response("User created", { status: 201 });
+  
 }
 
