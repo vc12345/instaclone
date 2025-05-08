@@ -46,6 +46,8 @@ export default function Home() {
             <button onClick={() => signOut()}>Logout</button>
           </>
         ) : (
+          <Link href="/login">Login</Link>
+          <Link href="/signup">Sign Up</Link>
           <button onClick={() => signIn("google")}>Login with Google</button>
         )}
       </div>
