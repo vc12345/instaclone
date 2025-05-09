@@ -2,18 +2,26 @@
 import { useEffect, useState } from "react";
 import { useSession, signIn, signOut } from "next-auth/react";
 import Link from "next/link";
-import UserSearchBar from "@/components/UserSearchBar"; // Import the component
+import UserSearchBar from "@/components/UserSearchBar";
 
 export default function Home() {
   const { data: session } = useSession();
   const [caption, setCaption] = useState("");
   const [image, setImage] = useState(null);
   const [posts, setPosts] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const POSTS_PER_PAGE = 3;
 
   const fetchPosts = async () => {
     const res = await fetch("/api/posts");
     const data = await res.json();
-    setPosts(data);
+
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    const recentPosts = data.filter(post => new Date(post.createdAt) > yesterday);
+    setPosts(recentPosts);
   };
 
   useEffect(() => {
@@ -38,6 +46,10 @@ export default function Home() {
     fetchPosts();
   };
 
+  const totalPages = Math.ceil(posts.length / POSTS_PER_PAGE);
+  const start = (currentPage - 1) * POSTS_PER_PAGE;
+  const paginatedPosts = posts.slice(start, start + POSTS_PER_PAGE);
+
   return (
     <div>
       <div>
@@ -55,7 +67,6 @@ export default function Home() {
         )}
       </div>
 
-      {/* 🔍 Add search bar here */}
       <div className="my-6">
         <UserSearchBar />
       </div>
@@ -78,15 +89,33 @@ export default function Home() {
         </form>
       )}
 
-      <div>
-        {posts.map((post) => (
+      <div className="my-6">
+        {paginatedPosts.map((post) => (
           <div key={post._id}>
             <img src={post.imageUrl} alt="post" width="300" />
             <p>{post.caption}</p>
           </div>
         ))}
+
+        {/* Pagination controls */}
+        <div className="flex gap-4 mt-4">
+          <button
+            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+            disabled={currentPage === 1}
+          >
+            Previous
+          </button>
+          <span>Page {currentPage} of {totalPages}</span>
+          <button
+            onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+            disabled={currentPage === totalPages}
+          >
+            Next
+          </button>
+        </div>
       </div>
     </div>
   );
 }
+
 
