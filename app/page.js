@@ -55,27 +55,6 @@ export default function Home() {
     <>
       <Header />
       <div>
-        <div>
-          {session ? (
-            <>
-              <p>Welcome, {session.user.name}</p>
-              <button onClick={() => signOut()}>Logout</button>
-            </>
-          ) : (
-            <div>
-              <Link href="/login">Login</Link>
-              <Link href="/signup" className="ml-4">Sign Up</Link>
-              <button onClick={() => signIn("google")} className="ml-4">
-                Login with Google
-              </button>
-            </div>
-          )}
-        </div>
-
-        <div className="my-6">
-          <UserSearchBar />
-        </div>
-
         {session && (
           <form onSubmit={handleSubmit}>
             <input
