@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { useSession, signIn, signOut } from "next-auth/react";
 import Link from "next/link";
+import UserSearchBar from "@/components/UserSearchBar"; // Import the component
 
 export default function Home() {
   const { data: session } = useSession();
@@ -17,7 +18,7 @@ export default function Home() {
 
   useEffect(() => {
     fetchPosts();
-  }, [fetchPosts]);
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -54,6 +55,11 @@ export default function Home() {
         )}
       </div>
 
+      {/* 🔍 Add search bar here */}
+      <div className="my-6">
+        <UserSearchBar />
+      </div>
+
       {session && (
         <form onSubmit={handleSubmit}>
           <input
@@ -66,10 +72,9 @@ export default function Home() {
           <button type="submit">Upload</button>
           <div className="mt-8">
             <Link href="/my-posts" className="text-blue-500 underline">
-            My Posts
+              My Posts
             </Link>
           </div>
-
         </form>
       )}
 
@@ -84,3 +89,4 @@ export default function Home() {
     </div>
   );
 }
+
