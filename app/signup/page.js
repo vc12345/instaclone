@@ -6,6 +6,7 @@ export default function SignupPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
+  const [school, setSchool] = useState("");
   const router = useRouter();
 
   const handleSignup = async (e) => {
