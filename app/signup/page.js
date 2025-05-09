@@ -13,7 +13,7 @@ export default function SignupPage() {
     const res = await fetch("/api/signup", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password, name }),
+      body: JSON.stringify({ email, password, name, school }),
     });
 
     if (res.ok) {
@@ -49,6 +49,14 @@ export default function SignupPage() {
         placeholder="Password"
         value={password}
         onChange={(e) => setPassword(e.target.value)}
+        required
+        className="border p-2 w-full"
+      />
+      <input
+        type="text"
+        placeholder="School"
+        value={school}
+        onChange={(e) => setSchool(e.target.value)}
         required
         className="border p-2 w-full"
       />

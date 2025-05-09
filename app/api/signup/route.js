@@ -51,6 +51,7 @@ export async function POST(req) {
     email,
     password: hashed,
     name,
+    school,
     username, // Add the generated username
     createdAt: new Date(),
   });
