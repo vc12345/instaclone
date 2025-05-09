@@ -3,15 +3,6 @@ import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import Header from "@/components/Header";
 
-export default function Page() {
-  return (
-    <>
-      <Header />
-      {/* Your page content below */}
-    </>
-  );
-}
-
 export default function MyPostsPage() {
   const { data: session, status } = useSession();
   const [posts, setPosts] = useState([]);
@@ -55,43 +46,46 @@ export default function MyPostsPage() {
   if (!session) return <p>You must be logged in to see your posts.</p>;
 
   return (
-    <div>
-      <h1 className="text-xl font-bold mb-4">My Posts</h1>
-      {posts.length === 0 && <p>No posts yet.</p>}
+    <>
+      <Header />
+      <div>
+        <h1 className="text-xl font-bold mb-4">My Posts</h1>
+        {posts.length === 0 && <p>No posts yet.</p>}
 
-      {paginatedPosts.map((post) => (
-        <div key={post._id} className="mb-6">
-          <img src={post.imageUrl} alt={post.caption} className="w-full max-w-sm" />
-          <p>{post.caption}</p>
-          <button
-            onClick={() => handleDelete(post._id)}
-            className="text-red-500 mt-2 underline"
-          >
-            Delete
-          </button>
-        </div>
-      ))}
+        {paginatedPosts.map((post) => (
+          <div key={post._id} className="mb-6">
+            <img src={post.imageUrl} alt={post.caption} className="w-full max-w-sm" />
+            <p>{post.caption}</p>
+            <button
+              onClick={() => handleDelete(post._id)}
+              className="text-red-500 mt-2 underline"
+            >
+              Delete
+            </button>
+          </div>
+        ))}
 
-      {posts.length > POSTS_PER_PAGE && (
-        <div className="flex gap-4 mt-4">
-          <button
-            onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
-            disabled={currentPage === 1}
-          >
-            Previous
-          </button>
-          <span>
-            Page {currentPage} of {totalPages}
-          </span>
-          <button
-            onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
-            disabled={currentPage === totalPages}
-          >
-            Next
-          </button>
-        </div>
-      )}
-    </div>
+        {posts.length > POSTS_PER_PAGE && (
+          <div className="flex gap-4 mt-4">
+            <button
+              onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+              disabled={currentPage === 1}
+            >
+              Previous
+            </button>
+            <span>
+              Page {currentPage} of {totalPages}
+            </span>
+            <button
+              onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
+              disabled={currentPage === totalPages}
+            >
+              Next
+            </button>
+          </div>
+        )}
+      </div>
+    </>
   );
 }
 

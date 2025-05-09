@@ -5,15 +5,6 @@ import Link from "next/link";
 import UserSearchBar from "@/components/UserSearchBar";
 import Header from "@/components/Header";
 
-export default function Page() {
-  return (
-    <>
-      <Header />
-      {/* Your page content below */}
-    </>
-  );
-}
-
 export default function Home() {
   const { data: session } = useSession();
   const [caption, setCaption] = useState("");
@@ -61,71 +52,77 @@ export default function Home() {
   const paginatedPosts = posts.slice(start, start + POSTS_PER_PAGE);
 
   return (
-    <div>
+    <>
+      <Header />
       <div>
-        {session ? (
-          <>
-            <p>Welcome, {session.user.name}</p>
-            <button onClick={() => signOut()}>Logout</button>
-          </>
-        ) : (
-          <div>
-            <Link href="/login">Login</Link>
-            <Link href="/signup">Sign Up</Link>
-            <button onClick={() => signIn("google")}>Login with Google</button>
-          </div>
+        <div>
+          {session ? (
+            <>
+              <p>Welcome, {session.user.name}</p>
+              <button onClick={() => signOut()}>Logout</button>
+            </>
+          ) : (
+            <div>
+              <Link href="/login">Login</Link>
+              <Link href="/signup" className="ml-4">Sign Up</Link>
+              <button onClick={() => signIn("google")} className="ml-4">
+                Login with Google
+              </button>
+            </div>
+          )}
+        </div>
+
+        <div className="my-6">
+          <UserSearchBar />
+        </div>
+
+        {session && (
+          <form onSubmit={handleSubmit}>
+            <input
+              type="text"
+              value={caption}
+              onChange={(e) => setCaption(e.target.value)}
+              placeholder="Write a caption..."
+            />
+            <input type="file" onChange={(e) => setImage(e.target.files[0])} />
+            <button type="submit">Upload</button>
+            <div className="mt-8">
+              <Link href="/my-posts" className="text-blue-500 underline">
+                My Posts
+              </Link>
+            </div>
+          </form>
         )}
-      </div>
 
-      <div className="my-6">
-        <UserSearchBar />
-      </div>
+        <div className="my-6">
+          {paginatedPosts.map((post) => (
+            <div key={post._id}>
+              <img src={post.imageUrl} alt="post" width="300" />
+              <p>{post.caption}</p>
+            </div>
+          ))}
 
-      {session && (
-        <form onSubmit={handleSubmit}>
-          <input
-            type="text"
-            value={caption}
-            onChange={(e) => setCaption(e.target.value)}
-            placeholder="Write a caption..."
-          />
-          <input type="file" onChange={(e) => setImage(e.target.files[0])} />
-          <button type="submit">Upload</button>
-          <div className="mt-8">
-            <Link href="/my-posts" className="text-blue-500 underline">
-              My Posts
-            </Link>
+          {/* Pagination controls */}
+          <div className="flex gap-4 mt-4">
+            <button
+              onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+              disabled={currentPage === 1}
+            >
+              Previous
+            </button>
+            <span>Page {currentPage} of {totalPages}</span>
+            <button
+              onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+              disabled={currentPage === totalPages}
+            >
+              Next
+            </button>
           </div>
-        </form>
-      )}
-
-      <div className="my-6">
-        {paginatedPosts.map((post) => (
-          <div key={post._id}>
-            <img src={post.imageUrl} alt="post" width="300" />
-            <p>{post.caption}</p>
-          </div>
-        ))}
-
-        {/* Pagination controls */}
-        <div className="flex gap-4 mt-4">
-          <button
-            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-            disabled={currentPage === 1}
-          >
-            Previous
-          </button>
-          <span>Page {currentPage} of {totalPages}</span>
-          <button
-            onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
-            disabled={currentPage === totalPages}
-          >
-            Next
-          </button>
         </div>
       </div>
-    </div>
+    </>
   );
 }
+
 
 
