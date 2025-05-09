@@ -1,6 +1,18 @@
 import clientPromise from "@/lib/mongodb";
 import Link from "next/link";
 import { ObjectId } from "mongodb";
+import Header from "@/components/Header";
+
+export default function Page() {
+  return (
+    <>
+      <Header />
+      {/* Your page content below */}
+    </>
+  );
+}
+
+
 
 export default async function UserProfile({ params, searchParams }) {
   const { username } = params;

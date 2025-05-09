@@ -1,6 +1,16 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
+import Header from "@/components/Header";
+
+export default function Page() {
+  return (
+    <>
+      <Header />
+      {/* Your page content below */}
+    </>
+  );
+}
 
 export default function MyPostsPage() {
   const { data: session, status } = useSession();

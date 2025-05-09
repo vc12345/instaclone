@@ -3,6 +3,16 @@ import { useEffect, useState } from "react";
 import { useSession, signIn, signOut } from "next-auth/react";
 import Link from "next/link";
 import UserSearchBar from "@/components/UserSearchBar";
+import Header from "@/components/Header";
+
+export default function Page() {
+  return (
+    <>
+      <Header />
+      {/* Your page content below */}
+    </>
+  );
+}
 
 export default function Home() {
   const { data: session } = useSession();

@@ -1,10 +1,9 @@
 import clientPromise from "@/lib/mongodb";
 
 export async function GET(req) {
-  const { searchParams } = new URL(req.url);
-  const query = searchParams.get("q");
+  const query = new URL(req.url).searchParams.get("query");
 
-  if (!query || query.trim() === "") {
+  if (!query) {
     return new Response(JSON.stringify([]), {
       headers: { "Content-Type": "application/json" },
     });
@@ -16,11 +15,12 @@ export async function GET(req) {
   const users = await db
     .collection("users")
     .find({ name: { $regex: query, $options: "i" } })
-    .limit(10)
-    .project({ name: 1, username: 1, _id: 0 })
+    .project({ name: 1, username: 1 })
+    .limit(5)
     .toArray();
 
   return new Response(JSON.stringify(users), {
     headers: { "Content-Type": "application/json" },
   });
 }
+
