@@ -45,6 +45,8 @@ export default async function UserProfile({ params, searchParams }) {
   return (
     <>
       <Header />
+      <FavoriteButton username={username} />
+
       <div>
         <h1 className="text-xl font-bold mb-4">Posts by {user.name || username}</h1>
         {user.school && (
