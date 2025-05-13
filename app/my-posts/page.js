@@ -1,8 +1,7 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import Header from "@/components/Header";
-import { useEffect, useState, useCallback } from "react";
 
 
 export default function MyPostsPage() {
