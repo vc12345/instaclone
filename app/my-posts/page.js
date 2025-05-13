@@ -2,6 +2,8 @@
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import Header from "@/components/Header";
+import { useEffect, useState, useCallback } from "react";
+
 
 export default function MyPostsPage() {
   const { data: session, status } = useSession();
@@ -9,20 +11,22 @@ export default function MyPostsPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const POSTS_PER_PAGE = 3;
 
-  const fetchPosts = async () => {
+  const fetchPosts = useCallback(async () => {
     const res = await fetch("/api/posts");
     const allPosts = await res.json();
     const myPosts = allPosts.filter(
       (post) => post.userEmail === session?.user?.email
     );
     setPosts(myPosts);
-  };
+  }, [session]);
+
 
   useEffect(() => {
-    if (session) {
-      fetchPosts();
-    }
-  }, [session]);
+  if (session) {
+    fetchPosts();
+  }
+}, [session, fetchPosts]);
+
 
   const handleDelete = async (id) => {
     if (!confirm("Are you sure you want to delete this post?")) return;
