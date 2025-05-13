@@ -48,17 +48,17 @@ export default async function UserProfile({ params, searchParams }) {
   }
 
   
-  // Count total posts
+  // Count total posts - use username instead of email
   const totalPosts = await db
     .collection("posts")
-    .countDocuments({ userEmail: user.email });
+    .countDocuments({ username });
 
   const totalPages = Math.ceil(totalPosts / POSTS_PER_PAGE);
 
-  // Fetch paginated posts
+  // Fetch paginated posts - use username instead of email
   const posts = await db
     .collection("posts")
-    .find({ userEmail: user.email })
+    .find({ username })
     .sort({ createdAt: -1 })
     .skip((currentPage - 1) * POSTS_PER_PAGE)
     .limit(POSTS_PER_PAGE)
@@ -131,5 +131,3 @@ export default async function UserProfile({ params, searchParams }) {
     </>
   );
 }
-
-
