@@ -14,7 +14,22 @@ export default function Home() {
   const [recentUsers, setRecentUsers] = useState([]);
   const [isUploading, setIsUploading] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [favorites, setFavorites] = useState([]);
   const fileInputRef = useRef(null);
+
+  // Fetch user's favorites
+  const fetchFavorites = async () => {
+    if (!session?.user?.email) return [];
+    
+    try {
+      const res = await fetch("/api/favorites");
+      const data = await res.json();
+      return data.map(fav => fav.favoritedUsername);
+    } catch (error) {
+      console.error("Error fetching favorites:", error);
+      return [];
+    }
+  };
 
   // Fetch users who posted in the last 24 hours
   const fetchRecentUsers = async () => {
@@ -29,21 +44,29 @@ export default function Home() {
       yesterday.setDate(yesterday.getDate() - 1);
       const recentPosts = data.filter(post => new Date(post.createdAt) > yesterday);
       
-      // Extract unique users from recent posts
-      const uniqueUsers = Array.from(new Set(recentPosts.map(post => post.username)))
-        .map(username => {
-          const userPosts = recentPosts.filter(post => post.username === username);
-          return {
-            username,
-            postCount: userPosts.length,
-            latestPost: userPosts.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))[0],
-            // Get the most recent post image for the user
-            latestImage: userPosts.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))[0]?.imageUrl
-          };
-        })
-        .sort((a, b) => b.postCount - a.postCount); // Sort by post count
-      
-      setRecentUsers(uniqueUsers);
+      // If logged in, fetch favorites to filter users
+      let favUsernames = [];
+      if (session?.user?.email) {
+        favUsernames = await fetchFavorites();
+        setFavorites(favUsernames);
+        
+        // Only show users that the current user follows
+        if (favUsernames.length > 0) {
+          const filteredPosts = recentPosts.filter(post => 
+            favUsernames.includes(post.username)
+          );
+          
+          // Extract unique users from filtered posts
+          const uniqueUsers = processPostsToUsers(filteredPosts);
+          setRecentUsers(uniqueUsers);
+        } else {
+          setRecentUsers([]);
+        }
+      } else {
+        // Not logged in, show all recent users
+        const uniqueUsers = processPostsToUsers(recentPosts);
+        setRecentUsers(uniqueUsers);
+      }
     } catch (error) {
       console.error("Error fetching recent users:", error);
       setRecentUsers([]);
@@ -52,9 +75,24 @@ export default function Home() {
     }
   };
 
+  // Helper function to process posts into unique users with their stats
+  const processPostsToUsers = (posts) => {
+    return Array.from(new Set(posts.map(post => post.username)))
+      .map(username => {
+        const userPosts = posts.filter(post => post.username === username);
+        return {
+          username,
+          postCount: userPosts.length,
+          latestPost: userPosts.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))[0],
+          latestImage: userPosts.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))[0]?.imageUrl
+        };
+      })
+      .sort((a, b) => b.postCount - a.postCount); // Sort by post count
+  };
+
   useEffect(() => {
     fetchRecentUsers();
-  }, []);
+  }, [session]);
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
@@ -215,7 +253,9 @@ export default function Home() {
         {/* Recent Active Users Section */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-2xl font-bold text-gray-800">Recent Activity</h2>
+            <h2 className="text-2xl font-bold text-gray-800">
+              {session ? "Recent Activity From People You Follow" : "Recent Activity"}
+            </h2>
             <div className="text-sm text-gray-500">Last 24 hours</div>
           </div>
           
@@ -228,8 +268,19 @@ export default function Home() {
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-12 h-12 mx-auto text-gray-400 mb-3">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
               </svg>
-              <h3 className="text-xl font-light mb-1">No Recent Activity</h3>
-              <p className="text-gray-500">No users have posted in the last 24 hours.</p>
+              <h3 className="text-xl font-light mb-1">
+                {session ? "No Recent Activity From People You Follow" : "No Recent Activity"}
+              </h3>
+              <p className="text-gray-500">
+                {session 
+                  ? "People you follow haven't posted in the last 24 hours." 
+                  : "No users have posted in the last 24 hours."}
+              </p>
+              {session && favorites.length === 0 && (
+                <Link href="/my-favorites" className="mt-4 inline-block text-blue-500 font-medium">
+                  Follow Users
+                </Link>
+              )}
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
