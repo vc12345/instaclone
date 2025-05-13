@@ -4,7 +4,7 @@ import { ObjectId } from "mongodb";
 import Header from "@/components/Header";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-
+import FavoriteButton from "@/components/FavoriteButton";
 
 export default async function UserProfile({ params, searchParams }) {
   try {
@@ -94,23 +94,12 @@ export default async function UserProfile({ params, searchParams }) {
         <Header />
 
         {session?.user?.username && session.user.username !== username && (
-          <form
-            method="POST"
-            action={`/api/favorites`}
-            onSubmit={async (e) => {
-              e.preventDefault();
-              await fetch("/api/favorites", {
-                method: isFavorited ? "DELETE" : "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ username }),
-              });
-              location.reload();
-            }}
-          >
-            <button type="submit" className="text-blue-500 underline">
-              {isFavorited ? "Remove from Favorites" : "Add to Favorites"}
-            </button>
-          </form>
+          <div className="mb-4">
+            <FavoriteButton 
+              username={username} 
+              initialIsFavorited={isFavorited} 
+            />
+          </div>
         )}
 
         <div>

@@ -1,40 +1,29 @@
 "use client";
-import { useSession } from "next-auth/react";
+
 import { useState } from "react";
 
-export default function FavoriteButton({ username }) {
-  const { data: session } = useSession();
-  const [isFavorited, setIsFavorited] = useState(false);
-  const [loading, setLoading] = useState(false);
+export default function FavoriteButton({ username, initialIsFavorited }) {
+  const [isFavorited, setIsFavorited] = useState(initialIsFavorited);
 
-  const handleFavorite = async () => {
-    if (!session) return alert("Please log in to favorite users.");
-    if (session.user.username === username) return alert("You can't favorite yourself.");
-    setLoading(true);
-
-    const res = await fetch("/api/favorites", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username }),
-    });
-
-    if (res.ok) {
-      setIsFavorited(true);
-    } else {
-      const err = await res.json();
-      alert(err.message || "Error adding favorite.");
+  const handleToggleFavorite = async () => {
+    try {
+      await fetch("/api/favorites", {
+        method: isFavorited ? "DELETE" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username }),
+      });
+      setIsFavorited(!isFavorited);
+    } catch (error) {
+      console.error("Error toggling favorite:", error);
     }
-
-    setLoading(false);
   };
 
   return (
-    <button
-      onClick={handleFavorite}
-      disabled={loading || isFavorited}
-      className={`underline ${isFavorited ? "text-gray-400" : "text-green-600"}`}
+    <button 
+      onClick={handleToggleFavorite} 
+      className="text-blue-500 underline"
     >
-      {isFavorited ? "Favorited" : "Add to Favorites"}
+      {isFavorited ? "Remove from Favorites" : "Add to Favorites"}
     </button>
   );
 }
