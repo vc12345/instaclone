@@ -22,11 +22,10 @@ export async function POST(req) {
       {
         transformation: [
           { width: 1280, crop: "limit" },      // Resize if too wide
-          { effect: "blur:800" },              // More noticeable blur
-          { effect: "saturation:-50" },        // Reduce saturation by 50%
-          { effect: "brightness:-15" },        // More noticeable brightness reduction
+          { effect: "blur:300" },              // More noticeable blur
+          { effect: "saturation:-30" },        // Reduce saturation by 50%
+          { effect: "brightness:-10" },        // More noticeable brightness reduction
           { effect: "contrast:-10" },          // Reduce contrast
-          { effect: "vignette:30" },           // Add subtle vignette effect
           { quality: "auto:eco" },             // Smart compression
           { fetch_format: "auto" }             // Convert to WebP or JPEG
         ],
