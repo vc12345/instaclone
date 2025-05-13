@@ -100,9 +100,11 @@ export default async function UserProfile({ params, searchParams }) {
             {/* Profile Picture */}
             <div className="w-24 h-24 md:w-36 md:h-36 rounded-full overflow-hidden bg-gray-200 flex-shrink-0 mb-4 md:mb-0 md:mr-8">
               {user.image ? (
-                <img 
+                <Image 
                   src={user.image} 
                   alt={username} 
+                  width={144}
+                  height={144}
                   className="w-full h-full object-cover"
                 />
               ) : (
@@ -151,16 +153,18 @@ export default async function UserProfile({ params, searchParams }) {
                   </svg>
                 </div>
                 <h3 className="text-2xl font-light mb-1">No Posts Yet</h3>
-                <p className="text-gray-500">When {username} shares photos, you'll see them here.</p>
+                <p className="text-gray-500">When {username} shares photos, you&apos;ll see them here.</p>
               </div>
             ) : (
               <div className="grid grid-cols-3 gap-1 md:gap-4">
                 {posts.map((post) => (
                   <div key={post._id.toString()} className="aspect-square relative overflow-hidden bg-gray-100">
-                    <img 
+                    <Image 
                       src={post.imageUrl} 
-                      alt={post.caption} 
-                      className="w-full h-full object-cover"
+                      alt={post.caption || "Post image"}
+                      fill
+                      sizes="(max-width: 768px) 33vw, 300px"
+                      className="object-cover"
                     />
                   </div>
                 ))}

@@ -2,6 +2,7 @@
 import { useSession, signIn, signOut } from "next-auth/react";
 import Link from "next/link";
 import { useEffect, useState, useRef } from "react";
+import Image from "next/image";
 
 export default function Header() {
   const { data: session } = useSession();
@@ -90,7 +91,15 @@ export default function Header() {
                 >
                   <div className="w-8 h-8 rounded-full bg-gray-200 mr-3 flex-shrink-0 overflow-hidden">
                     {user.image ? (
-                      <img src={user.image} alt="" className="w-full h-full object-cover" />
+                      <div className="relative w-full h-full">
+                        <Image 
+                          src={user.image} 
+                          alt="" 
+                          fill
+                          sizes="32px"
+                          className="object-cover" 
+                        />
+                      </div>
                     ) : (
                       <div className="w-full h-full flex items-center justify-center bg-blue-100 text-blue-500 font-bold">
                         {user.username.charAt(0).toUpperCase()}
@@ -138,7 +147,15 @@ export default function Header() {
                 className="w-8 h-8 rounded-full bg-gray-200 overflow-hidden flex-shrink-0"
               >
                 {session.user.image ? (
-                  <img src={session.user.image} alt="" className="w-full h-full object-cover" />
+                  <div className="relative w-full h-full">
+                    <Image 
+                      src={session.user.image} 
+                      alt="" 
+                      fill
+                      sizes="32px"
+                      className="object-cover" 
+                    />
+                  </div>
                 ) : (
                   <div className="w-full h-full flex items-center justify-center bg-blue-100 text-blue-500 font-bold">
                     {session.user.name?.charAt(0).toUpperCase() || "U"}
@@ -229,7 +246,15 @@ export default function Header() {
               >
                 <div className="w-8 h-8 rounded-full bg-gray-200 mr-3 flex-shrink-0">
                   {user.image ? (
-                    <img src={user.image} alt="" className="w-full h-full object-cover" />
+                    <div className="relative w-full h-full">
+                      <Image 
+                        src={user.image} 
+                        alt="" 
+                        fill
+                        sizes="32px"
+                        className="object-cover" 
+                      />
+                    </div>
                   ) : (
                     <div className="w-full h-full flex items-center justify-center bg-blue-100 text-blue-500 font-bold">
                       {user.username.charAt(0).toUpperCase()}

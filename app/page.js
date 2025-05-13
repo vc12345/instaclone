@@ -3,6 +3,7 @@ import { useEffect, useState, useRef } from "react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 import Header from "@/components/Header";
+import Image from "next/image";
 
 export default function Home() {
   const { data: session } = useSession();
@@ -109,11 +110,14 @@ export default function Home() {
               <div className="mb-4">
                 {imagePreview ? (
                   <div className="relative">
-                    <img 
-                      src={imagePreview} 
-                      alt="Preview" 
-                      className="w-full h-64 object-cover rounded-md" 
-                    />
+                    <div className="relative w-full h-64">
+                      <Image 
+                        src={imagePreview} 
+                        alt="Preview" 
+                        fill
+                        className="object-cover rounded-md" 
+                      />
+                    </div>
                     <button
                       type="button"
                       onClick={() => {
@@ -194,11 +198,15 @@ export default function Home() {
                 </div>
                 
                 {/* Post Image */}
-                <img 
-                  src={post.imageUrl} 
-                  alt={post.caption} 
-                  className="w-full object-cover max-h-[500px]" 
-                />
+                <div className="relative w-full h-[500px]">
+                  <Image 
+                    src={post.imageUrl} 
+                    alt={post.caption || "Post image"} 
+                    fill
+                    sizes="(max-width: 768px) 100vw, 600px"
+                    className="object-cover" 
+                  />
+                </div>
                 
                 {/* Post Content */}
                 <div className="p-3">
