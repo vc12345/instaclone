@@ -14,7 +14,6 @@ export default async function UserProfile({ params, searchParams }) {
   const client = await clientPromise;
   const db = client.db("instaclone");
 
-
   
   // Fetch user by username
   const user = await db.collection("users").findOne({ username });
@@ -48,17 +47,27 @@ export default async function UserProfile({ params, searchParams }) {
   }
 
   
-  // Count total posts - use username instead of email
+  // Count total posts - use username or userEmail for compatibility
   const totalPosts = await db
     .collection("posts")
-    .countDocuments({ username });
+    .countDocuments({ 
+      $or: [
+        { username },
+        { userEmail: user.email }
+      ]
+    });
 
   const totalPages = Math.ceil(totalPosts / POSTS_PER_PAGE);
 
-  // Fetch paginated posts - use username instead of email
+  // Fetch paginated posts - use username or userEmail for compatibility
   const posts = await db
     .collection("posts")
-    .find({ username })
+    .find({ 
+      $or: [
+        { username },
+        { userEmail: user.email }
+      ]
+    })
     .sort({ createdAt: -1 })
     .skip((currentPage - 1) * POSTS_PER_PAGE)
     .limit(POSTS_PER_PAGE)
