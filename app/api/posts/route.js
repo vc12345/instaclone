@@ -18,10 +18,20 @@ export async function POST(req) {
   const buffer = Buffer.from(bytes);
 
   const uploadResult = await new Promise((resolve, reject) => {
-    const stream = cloudinary.uploader.upload_stream((error, result) => {
-      if (error) reject(error);
-      else resolve(result);
-    });
+    const stream = cloudinary.uploader.upload_stream(
+      {
+        transformation: [
+          { width: 1280, crop: "limit" },      // Resize if too wide
+          { quality: "auto:eco" },             // Smart compression
+          { fetch_format: "auto" }             // Convert to WebP or JPEG
+        ],
+        folder: "instaclone"                   // Organize in a folder
+      },
+      (error, result) => {
+        if (error) reject(error);
+        else resolve(result);
+      }
+    );
 
     const readable = require("stream").Readable.from(buffer);
     readable.pipe(stream);
@@ -35,7 +45,7 @@ export async function POST(req) {
     imageUrl: uploadResult.secure_url,
     createdAt: new Date(),
     username: session.user.username,
-    userEmail: session.user.email, // 👈 important!
+    userEmail: session.user.email,
   });
 
   return new Response("Success", { status: 200 });
@@ -43,21 +53,19 @@ export async function POST(req) {
 
 // GET = Fetch all posts
 export async function GET() {
-    const client = await clientPromise;
-    const db = client.db("instaclone");
-  
-    const posts = await db
-      .collection("posts")
-      .find({})
-      .sort({ createdAt: -1 })
-      .toArray();
-  
-    return new Response(JSON.stringify(posts), {
-      headers: { "Content-Type": "application/json" },
-    });
-  }
+  const client = await clientPromise;
+  const db = client.db("instaclone");
 
+  const posts = await db
+    .collection("posts")
+    .find({})
+    .sort({ createdAt: -1 })
+    .toArray();
 
+  return new Response(JSON.stringify(posts), {
+    headers: { "Content-Type": "application/json" },
+  });
+}
 
 // DELETE = Remove a post
 export async function DELETE(req) {
