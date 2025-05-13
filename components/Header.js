@@ -72,7 +72,7 @@ export default function Header() {
             {results.map((user) => (
               <Link
                 key={user.username}
-                href={`/${user.username}`}
+                href={`/user/${user.username}`}
                 className="block px-4 py-2 hover:bg-gray-100"
               >
                 {user.name} ({user.username})
