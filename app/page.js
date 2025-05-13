@@ -4,32 +4,56 @@ import { useSession } from "next-auth/react";
 import Link from "next/link";
 import Header from "@/components/Header";
 import Image from "next/image";
+import LayoutToggle from "@/components/LayoutToggle";
 
 export default function Home() {
   const { data: session } = useSession();
   const [caption, setCaption] = useState("");
   const [image, setImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
-  const [posts, setPosts] = useState([]);
-  const [currentPage, setCurrentPage] = useState(1);
+  const [recentUsers, setRecentUsers] = useState([]);
   const [isUploading, setIsUploading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const fileInputRef = useRef(null);
 
-  const POSTS_PER_PAGE = 5;
-
-  const fetchPosts = async () => {
-    const res = await fetch("/api/posts");
-    const data = await res.json();
-
-    const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
-
-    const recentPosts = data.filter(post => new Date(post.createdAt) > yesterday);
-    setPosts(recentPosts);
+  // Fetch users who posted in the last 24 hours
+  const fetchRecentUsers = async () => {
+    setIsLoading(true);
+    try {
+      // Get all posts
+      const res = await fetch("/api/posts");
+      const data = await res.json();
+      
+      // Filter posts from the last 24 hours
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      const recentPosts = data.filter(post => new Date(post.createdAt) > yesterday);
+      
+      // Extract unique users from recent posts
+      const uniqueUsers = Array.from(new Set(recentPosts.map(post => post.username)))
+        .map(username => {
+          const userPosts = recentPosts.filter(post => post.username === username);
+          return {
+            username,
+            postCount: userPosts.length,
+            latestPost: userPosts.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))[0],
+            // Get the most recent post image for the user
+            latestImage: userPosts.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))[0]?.imageUrl
+          };
+        })
+        .sort((a, b) => b.postCount - a.postCount); // Sort by post count
+      
+      setRecentUsers(uniqueUsers);
+    } catch (error) {
+      console.error("Error fetching recent users:", error);
+      setRecentUsers([]);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   useEffect(() => {
-    fetchPosts();
+    fetchRecentUsers();
   }, []);
 
   const handleImageChange = (e) => {
@@ -67,7 +91,7 @@ export default function Home() {
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
       }
-      fetchPosts();
+      fetchRecentUsers(); // Refresh the list after posting
     } catch (error) {
       console.error("Error uploading post:", error);
       alert("Failed to upload post. Please try again.");
@@ -76,23 +100,42 @@ export default function Home() {
     }
   };
 
-  const totalPages = Math.ceil(posts.length / POSTS_PER_PAGE);
-  const start = (currentPage - 1) * POSTS_PER_PAGE;
-  const paginatedPosts = posts.slice(start, start + POSTS_PER_PAGE);
-
   const formatDate = (dateString) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', { 
       month: 'short', 
-      day: 'numeric'
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
     });
+  };
+
+  const timeAgo = (dateString) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const seconds = Math.floor((now - date) / 1000);
+    
+    let interval = Math.floor(seconds / 3600);
+    if (interval >= 24) {
+      return "yesterday";
+    }
+    if (interval >= 1) {
+      return `${interval} ${interval === 1 ? 'hour' : 'hours'} ago`;
+    }
+    
+    interval = Math.floor(seconds / 60);
+    if (interval >= 1) {
+      return `${interval} ${interval === 1 ? 'minute' : 'minutes'} ago`;
+    }
+    
+    return 'just now';
   };
 
   return (
     <div className="bg-gray-50 min-h-screen">
       <Header />
       
-      <main className="max-w-xl mx-auto pt-6 pb-16 px-4">
+      <main className="max-w-4xl mx-auto pt-6 pb-16 px-4">
         {session && (
           <div className="bg-white border border-gray-200 rounded-lg p-4 mb-6 shadow-sm">
             <h2 className="text-lg font-semibold mb-4">Create Post</h2>
@@ -169,91 +212,74 @@ export default function Home() {
           </div>
         )}
 
-        {/* Posts Feed */}
-        <div className="space-y-4">
-          {paginatedPosts.length === 0 ? (
+        {/* Recent Active Users Section */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-2xl font-bold text-gray-800">Recent Activity</h2>
+            <div className="text-sm text-gray-500">Last 24 hours</div>
+          </div>
+          
+          {isLoading ? (
+            <div className="flex justify-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+            </div>
+          ) : recentUsers.length === 0 ? (
             <div className="bg-white border border-gray-200 rounded-lg p-8 text-center">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-12 h-12 mx-auto text-gray-400 mb-3">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z" />
-                <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zM18.75 10.5h.008v.008h-.008V10.5z" />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
               </svg>
-              <h3 className="text-xl font-light mb-1">No Recent Posts</h3>
-              <p className="text-gray-500">Recent posts will appear here.</p>
+              <h3 className="text-xl font-light mb-1">No Recent Activity</h3>
+              <p className="text-gray-500">No users have posted in the last 24 hours.</p>
             </div>
           ) : (
-            paginatedPosts.map((post) => (
-              <div key={post._id} className="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm">
-                {/* Post Header */}
-                <div className="flex items-center p-3">
-                  <Link href={`/user/${post.username}`} className="flex items-center">
-                    <div className="w-8 h-8 rounded-full bg-gray-200 mr-2 flex-shrink-0">
-                      {/* User avatar could go here */}
-                      <div className="w-full h-full flex items-center justify-center bg-blue-100 text-blue-500 font-bold">
-                        {post.username?.charAt(0).toUpperCase() || "U"}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {recentUsers.map((user) => (
+                <Link 
+                  href={`/user/${user.username}`} 
+                  key={user.username}
+                  className="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow"
+                >
+                  <div className="relative h-40 bg-gray-100">
+                    {user.latestImage && (
+                      <Image
+                        src={user.latestImage}
+                        alt={`${user.username}'s latest post`}
+                        fill
+                        sizes="(max-width: 768px) 100vw, 400px"
+                        className="object-cover"
+                      />
+                    )}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end">
+                      <div className="p-4 text-white">
+                        <div className="flex items-center">
+                          <div className="w-10 h-10 rounded-full bg-gray-200 mr-3 flex-shrink-0 border-2 border-white overflow-hidden">
+                            <div className="w-full h-full flex items-center justify-center bg-blue-500 text-white font-bold">
+                              {user.username.charAt(0).toUpperCase()}
+                            </div>
+                          </div>
+                          <div>
+                            <h3 className="font-bold">{user.username}</h3>
+                            <p className="text-sm opacity-90">
+                              {user.postCount} {user.postCount === 1 ? 'post' : 'posts'} today
+                            </p>
+                          </div>
+                        </div>
                       </div>
                     </div>
-                    <span className="font-medium">{post.username}</span>
-                  </Link>
-                  <span className="ml-auto text-xs text-gray-500">{formatDate(post.createdAt)}</span>
-                </div>
-                
-                {/* Post Image */}
-                <div className="relative w-full h-[500px]">
-                  <Image 
-                    src={post.imageUrl} 
-                    alt={post.caption || "Post image"} 
-                    fill
-                    sizes="(max-width: 768px) 100vw, 600px"
-                    className="object-cover" 
-                  />
-                </div>
-                
-                {/* Post Content */}
-                <div className="p-3">
-                  <p className="mb-2">
-                    <Link href={`/user/${post.username}`} className="font-medium mr-2">
-                      {post.username}
-                    </Link>
-                    {post.caption}
-                  </p>
-                </div>
-              </div>
-            ))
+                  </div>
+                  <div className="p-3 flex justify-between items-center">
+                    <div className="text-sm text-gray-500">
+                      Latest post: {timeAgo(user.latestPost?.createdAt)}
+                    </div>
+                    <div className="text-blue-500 text-sm font-medium">
+                      View Profile
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
           )}
         </div>
-
-        {/* Pagination */}
-        {totalPages > 1 && (
-          <div className="flex justify-center mt-6">
-            <div className="flex items-center space-x-4">
-              <button
-                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-                disabled={currentPage === 1}
-                className={`px-3 py-1 rounded ${
-                  currentPage === 1
-                    ? "text-gray-400 cursor-not-allowed"
-                    : "text-blue-500 hover:bg-blue-50"
-                }`}
-              >
-                Previous
-              </button>
-              <span className="text-gray-600">
-                Page {currentPage} of {totalPages}
-              </span>
-              <button
-                onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
-                disabled={currentPage === totalPages}
-                className={`px-3 py-1 rounded ${
-                  currentPage === totalPages
-                    ? "text-gray-400 cursor-not-allowed"
-                    : "text-blue-500 hover:bg-blue-50"
-                }`}
-              >
-                Next
-              </button>
-            </div>
-          </div>
-        )}
       </main>
     </div>
   );

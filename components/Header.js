@@ -50,7 +50,7 @@ export default function Header() {
         {/* Logo */}
         <div className="flex-shrink-0">
           <Link href="/" className="text-xl font-bold italic">
-            Instagram
+            Instaclone
           </Link>
         </div>
 

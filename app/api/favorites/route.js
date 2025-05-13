@@ -1,50 +1,74 @@
-// app/api/favorites/route.js
 import clientPromise from "@/lib/mongodb";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
-export async function GET() {
+// GET - Fetch user's favorites
+export async function GET(req) {
   const session = await getServerSession(authOptions);
-  if (!session) return Response.json([], { status: 401 });
+  if (!session) {
+    return new Response("Unauthorized", { status: 401 });
+  }
 
   const client = await clientPromise;
   const db = client.db("instaclone");
+
   const favorites = await db
     .collection("favorites")
     .find({ userEmail: session.user.email })
     .toArray();
 
-  const usernames = favorites.map((fav) => fav.favoritedUsername);
-  const users = await db
-    .collection("users")
-    .find({ username: { $in: usernames } })
-    .toArray();
-
-  return Response.json(users);
+  return new Response(JSON.stringify(favorites), {
+    headers: { "Content-Type": "application/json" },
+  });
 }
 
+// POST - Add a favorite
 export async function POST(req) {
   const session = await getServerSession(authOptions);
-  if (!session) return Response.json({ error: "Unauthorized" }, { status: 401 });
+  if (!session) {
+    return new Response("Unauthorized", { status: 401 });
+  }
 
   const { username } = await req.json();
+
   const client = await clientPromise;
   const db = client.db("instaclone");
 
-  await db.collection("favorites").updateOne(
-    { userEmail: session.user.email, favoritedUsername: username },
-    { $set: { favoritedAt: new Date() } },
-    { upsert: true }
-  );
+  // Check if user exists
+  const user = await db.collection("users").findOne({ username });
+  if (!user) {
+    return new Response("User not found", { status: 404 });
+  }
 
-  return Response.json({ success: true });
+  // Check if already favorited
+  const existing = await db.collection("favorites").findOne({
+    userEmail: session.user.email,
+    favoritedUsername: username,
+  });
+
+  if (existing) {
+    return new Response("Already favorited", { status: 400 });
+  }
+
+  // Add favorite
+  await db.collection("favorites").insertOne({
+    userEmail: session.user.email,
+    favoritedUsername: username,
+    createdAt: new Date(),
+  });
+
+  return new Response("Success", { status: 200 });
 }
 
+// DELETE - Remove a favorite
 export async function DELETE(req) {
   const session = await getServerSession(authOptions);
-  if (!session) return Response.json({ error: "Unauthorized" }, { status: 401 });
+  if (!session) {
+    return new Response("Unauthorized", { status: 401 });
+  }
 
   const { username } = await req.json();
+
   const client = await clientPromise;
   const db = client.db("instaclone");
 
@@ -53,5 +77,5 @@ export async function DELETE(req) {
     favoritedUsername: username,
   });
 
-  return Response.json({ success: true });
+  return new Response("Success", { status: 200 });
 }

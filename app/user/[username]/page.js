@@ -6,12 +6,14 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import FavoriteButton from "@/components/FavoriteButton";
 import Image from "next/image";
+import LayoutToggleServer from "@/components/LayoutToggleServer";
 
 export default async function UserProfile({ params, searchParams }) {
   try {
     const { username } = params;
     const currentPage = parseInt(searchParams.page) || 1;
-    const POSTS_PER_PAGE = 9; // Instagram shows 3 posts per row, 3 rows
+    const layout = searchParams.layout || 'grid'; // Default to grid layout
+    const POSTS_PER_PAGE = layout === 'grid' ? 9 : 3;
 
     const client = await clientPromise;
     const db = client.db("instaclone");
@@ -90,6 +92,14 @@ export default async function UserProfile({ params, searchParams }) {
       console.error("Error fetching posts:", fetchError);
     }
 
+    const formatDate = (dateString) => {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('en-US', { 
+        month: 'short', 
+        day: 'numeric'
+      });
+    };
+
     return (
       <div className="bg-gray-50 min-h-screen">
         <Header />
@@ -142,8 +152,14 @@ export default async function UserProfile({ params, searchParams }) {
             </div>
           </div>
           
-          {/* Post Grid */}
+          {/* Layout Toggle and Post Grid */}
           <div className="border-t border-gray-200 pt-6">
+            {posts.length > 0 && (
+              <div className="mb-6">
+                <LayoutToggleServer currentLayout={layout} username={username} />
+              </div>
+            )}
+            
             {posts.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-12">
                 <div className="w-16 h-16 border-2 border-black rounded-full flex items-center justify-center mb-4">
@@ -155,7 +171,7 @@ export default async function UserProfile({ params, searchParams }) {
                 <h3 className="text-2xl font-light mb-1">No Posts Yet</h3>
                 <p className="text-gray-500">When {username} shares photos, you&apos;ll see them here.</p>
               </div>
-            ) : (
+            ) : layout === 'grid' ? (
               <div className="grid grid-cols-3 gap-1 md:gap-4">
                 {posts.map((post) => (
                   <div key={post._id.toString()} className="aspect-square relative overflow-hidden bg-gray-100">
@@ -169,6 +185,39 @@ export default async function UserProfile({ params, searchParams }) {
                   </div>
                 ))}
               </div>
+            ) : (
+              <div className="space-y-6">
+                {posts.map((post) => (
+                  <div key={post._id.toString()} className="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm">
+                    <div className="flex items-center p-3">
+                      <div className="w-8 h-8 rounded-full bg-gray-200 mr-2 flex-shrink-0">
+                        <div className="w-full h-full flex items-center justify-center bg-blue-100 text-blue-500 font-bold">
+                          {username.charAt(0).toUpperCase()}
+                        </div>
+                      </div>
+                      <span className="font-medium">{username}</span>
+                      <span className="ml-auto text-xs text-gray-500">{formatDate(post.createdAt)}</span>
+                    </div>
+                    
+                    <div className="relative w-full h-[500px]">
+                      <Image 
+                        src={post.imageUrl} 
+                        alt={post.caption || "Post image"} 
+                        fill
+                        sizes="(max-width: 768px) 100vw, 800px"
+                        className="object-cover" 
+                      />
+                    </div>
+                    
+                    <div className="p-3">
+                      <p className="mb-2">
+                        <span className="font-medium mr-2">{username}</span>
+                        {post.caption}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
             )}
           </div>
           
@@ -178,7 +227,7 @@ export default async function UserProfile({ params, searchParams }) {
               <div className="flex items-center space-x-4">
                 {currentPage > 1 && (
                   <Link
-                    href={`?page=${currentPage - 1}`}
+                    href={`?page=${currentPage - 1}&layout=${layout}`}
                     className="text-blue-500 font-medium"
                   >
                     Previous
@@ -189,7 +238,7 @@ export default async function UserProfile({ params, searchParams }) {
                 </span>
                 {currentPage < totalPages && (
                   <Link
-                    href={`?page=${currentPage + 1}`}
+                    href={`?page=${currentPage + 1}&layout=${layout}`}
                     className="text-blue-500 font-medium"
                   >
                     Next

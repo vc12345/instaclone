@@ -3,20 +3,34 @@ import { useEffect, useState, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import Header from "@/components/Header";
 import Image from "next/image";
+import LayoutToggle from "@/components/LayoutToggle";
 
 export default function MyPostsPage() {
   const { data: session, status } = useSession();
   const [posts, setPosts] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const POSTS_PER_PAGE = 3;
+  const [layout, setLayout] = useState('single');
+  const [isLoading, setIsLoading] = useState(true);
+  
+  const POSTS_PER_PAGE = layout === 'grid' ? 9 : 3;
 
   const fetchPosts = useCallback(async () => {
-    const res = await fetch("/api/posts");
-    const allPosts = await res.json();
-    const myPosts = allPosts.filter(
-      (post) => post.userEmail === session?.user?.email
-    );
-    setPosts(myPosts);
+    if (!session?.user?.email) return;
+    
+    setIsLoading(true);
+    try {
+      const res = await fetch("/api/posts");
+      const allPosts = await res.json();
+      const myPosts = allPosts.filter(
+        (post) => post.userEmail === session.user.email
+      );
+      setPosts(myPosts);
+    } catch (error) {
+      console.error("Error fetching posts:", error);
+      setPosts([]);
+    } finally {
+      setIsLoading(false);
+    }
   }, [session]);
 
   useEffect(() => {
@@ -43,14 +57,107 @@ export default function MyPostsPage() {
   const start = (currentPage - 1) * POSTS_PER_PAGE;
   const paginatedPosts = posts.slice(start, start + POSTS_PER_PAGE);
 
-  if (status === "loading") return <p>Loading...</p>;
-  if (!session) return <p>You must be logged in to see your posts.</p>;
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { 
+      year: 'numeric',
+      month: 'short', 
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  const renderGridLayout = () => (
+    <div className="grid grid-cols-3 gap-1 md:gap-4">
+      {paginatedPosts.map((post) => (
+        <div key={post._id} className="aspect-square relative overflow-hidden bg-gray-100 group">
+          <Image 
+            src={post.imageUrl} 
+            alt={post.caption || "My post"} 
+            fill
+            sizes="(max-width: 768px) 33vw, 300px"
+            className="object-cover" 
+          />
+          <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all duration-200 flex flex-col justify-between p-3 opacity-0 group-hover:opacity-100">
+            <div className="text-white text-xs truncate">{post.caption}</div>
+            <div className="flex justify-between items-end w-full">
+              <span className="text-white text-xs">{formatDate(post.createdAt)}</span>
+              <button
+                onClick={() => handleDelete(post._id)}
+                className="text-red-400 hover:text-red-300 text-sm"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+
+  const renderSingleLayout = () => (
+    <div className="space-y-6">
+      {paginatedPosts.map((post) => (
+        <div key={post._id} className="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm">
+          <div className="relative w-full h-[400px]">
+            <Image 
+              src={post.imageUrl} 
+              alt={post.caption || "My post"} 
+              fill
+              sizes="(max-width: 768px) 100vw, 800px"
+              className="object-cover" 
+            />
+          </div>
+          <div className="p-4">
+            <div className="flex justify-between items-center mb-3">
+              <span className="text-sm text-gray-500">{formatDate(post.createdAt)}</span>
+              <button
+                onClick={() => handleDelete(post._id)}
+                className="text-red-500 text-sm font-medium hover:text-red-600 transition-colors"
+              >
+                Delete Post
+              </button>
+            </div>
+            <p>{post.caption}</p>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+
+  if (status === "loading" || isLoading) {
+    return (
+      <div className="bg-gray-50 min-h-screen">
+        <Header />
+        <div className="max-w-4xl mx-auto pt-8 px-4 flex justify-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+        </div>
+      </div>
+    );
+  }
+  
+  if (!session) {
+    return (
+      <div className="bg-gray-50 min-h-screen">
+        <Header />
+        <div className="max-w-4xl mx-auto pt-8 px-4 text-center">
+          <p className="text-lg">You must be logged in to see your posts.</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-gray-50 min-h-screen">
       <Header />
       <div className="max-w-4xl mx-auto pt-8 px-4">
-        <h1 className="text-2xl font-bold mb-6">My Posts</h1>
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-2xl font-bold">My Posts</h1>
+          {posts.length > 0 && (
+            <LayoutToggle layout={layout} setLayout={setLayout} />
+          )}
+        </div>
         
         {posts.length === 0 ? (
           <div className="bg-white border border-gray-200 rounded-lg p-8 text-center">
@@ -62,30 +169,7 @@ export default function MyPostsPage() {
             <p className="text-gray-500">When you share photos, they&apos;ll appear here.</p>
           </div>
         ) : (
-          <div className="space-y-6">
-            {paginatedPosts.map((post) => (
-              <div key={post._id} className="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm">
-                <div className="relative w-full h-[400px]">
-                  <Image 
-                    src={post.imageUrl} 
-                    alt={post.caption || "My post"} 
-                    fill
-                    sizes="(max-width: 768px) 100vw, 800px"
-                    className="object-cover" 
-                  />
-                </div>
-                <div className="p-4">
-                  <p className="mb-3">{post.caption}</p>
-                  <button
-                    onClick={() => handleDelete(post._id)}
-                    className="text-red-500 text-sm font-medium hover:text-red-600 transition-colors"
-                  >
-                    Delete Post
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
+          layout === 'grid' ? renderGridLayout() : renderSingleLayout()
         )}
 
         {posts.length > POSTS_PER_PAGE && (
