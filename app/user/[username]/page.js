@@ -31,16 +31,22 @@ export default async function UserProfile({ params, searchParams }) {
       </>
     );
 
-  const session = await getServerSession(authOptions);
   let isFavorited = false;
+  const session = await getServerSession(authOptions);
 
-  if (session) {
+  // Check only if logged in AND session includes email + username
+  if (
+    session?.user?.email &&
+    session.user?.username &&
+    session.user.username !== username
+  ) {
     const favorite = await db.collection("favorites").findOne({
       userEmail: session.user.email,
       favoritedUsername: username,
     });
     isFavorited = !!favorite;
   }
+
   
   // Count total posts
   const totalPosts = await db
@@ -62,7 +68,7 @@ export default async function UserProfile({ params, searchParams }) {
     <>
       <Header />
 
-      {session && session.user.username !== username && (
+      {session?.user?.username && session.user.username !== username && (
         <form
           method="POST"
           action={`/api/favorites`}
@@ -81,6 +87,7 @@ export default async function UserProfile({ params, searchParams }) {
           </button>
         </form>
       )}
+
 
       <div>
         <h1 className="text-xl font-bold mb-4">Posts by {user.name || username}</h1>
