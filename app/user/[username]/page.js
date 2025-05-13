@@ -2,6 +2,9 @@ import clientPromise from "@/lib/mongodb";
 import Link from "next/link";
 import { ObjectId } from "mongodb";
 import Header from "@/components/Header";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+
 
 export default async function UserProfile({ params, searchParams }) {
   const { username } = params;
@@ -11,6 +14,8 @@ export default async function UserProfile({ params, searchParams }) {
   const client = await clientPromise;
   const db = client.db("instaclone");
 
+
+  
   // Fetch user by username
   const user = await db.collection("users").findOne({ username });
   if (!user)
@@ -26,6 +31,17 @@ export default async function UserProfile({ params, searchParams }) {
       </>
     );
 
+  const session = await getServerSession(authOptions);
+  let isFavorited = false;
+
+  if (session) {
+    const favorite = await db.collection("favorites").findOne({
+      userEmail: session.user.email,
+      favoritedUsername: username,
+    });
+    isFavorited = !!favorite;
+  }
+  
   // Count total posts
   const totalPosts = await db
     .collection("posts")
@@ -45,7 +61,26 @@ export default async function UserProfile({ params, searchParams }) {
   return (
     <>
       <Header />
-      <FavoriteButton username={username} />
+
+      {session && session.user.username !== username && (
+        <form
+          method="POST"
+          action={`/api/favorites`}
+          onSubmit={async (e) => {
+            e.preventDefault();
+            await fetch("/api/favorites", {
+              method: isFavorited ? "DELETE" : "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ username }),
+            });
+            location.reload(); // reload to reflect change
+          }}
+        >
+          <button type="submit" className="text-blue-500 underline">
+            {isFavorited ? "Remove from Favorites" : "Add to Favorites"}
+          </button>
+        </form>
+      )}
 
       <div>
         <h1 className="text-xl font-bold mb-4">Posts by {user.name || username}</h1>

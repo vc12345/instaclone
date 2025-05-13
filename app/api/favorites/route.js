@@ -1,8 +1,9 @@
+// app/api/favorites/route.js
+import clientPromise from "@/lib/mongodb";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import clientPromise from "@/lib/mongodb";
 
-export async function GET(req) {
+export async function GET() {
   const session = await getServerSession(authOptions);
   if (!session) return Response.json([], { status: 401 });
 
@@ -13,20 +14,26 @@ export async function GET(req) {
     .find({ userEmail: session.user.email })
     .toArray();
 
-  return Response.json(favorites);
+  const usernames = favorites.map((fav) => fav.favoritedUsername);
+  const users = await db
+    .collection("users")
+    .find({ username: { $in: usernames } })
+    .toArray();
+
+  return Response.json(users);
 }
 
 export async function POST(req) {
   const session = await getServerSession(authOptions);
   if (!session) return Response.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { username, name } = await req.json();
+  const { username } = await req.json();
   const client = await clientPromise;
   const db = client.db("instaclone");
 
   await db.collection("favorites").updateOne(
-    { userEmail: session.user.email, username },
-    { $set: { username, name } },
+    { userEmail: session.user.email, favoritedUsername: username },
+    { $set: { favoritedAt: new Date() } },
     { upsert: true }
   );
 
@@ -43,7 +50,7 @@ export async function DELETE(req) {
 
   await db.collection("favorites").deleteOne({
     userEmail: session.user.email,
-    username,
+    favoritedUsername: username,
   });
 
   return Response.json({ success: true });

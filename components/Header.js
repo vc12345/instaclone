@@ -25,9 +25,17 @@ export default function Header() {
   return (
     <header className="flex flex-col items-start gap-2 p-4 border-b">
       <div className="flex items-center justify-between w-full">
-        <Link href="/" className="text-lg font-bold text-blue-600">
-          Go to Homepage
-        </Link>
+        <div className="flex items-center gap-4">
+          <Link href="/" className="text-lg font-bold text-blue-600">
+            Go to Homepage
+          </Link>
+          {session && (
+            <Link href="/my-favorites" className="text-blue-500 underline">
+              My Favorites
+            </Link>
+          )}
+        </div>
+
 
         {session ? (
           <div className="flex items-center gap-4">
