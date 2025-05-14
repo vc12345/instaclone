@@ -4,6 +4,8 @@ import { useSession } from "next-auth/react";
 import Header from "@/components/Header";
 import Image from "next/image";
 import LayoutToggle from "@/components/LayoutToggle";
+import FakeLikeCounter from "@/components/FakeLikeCounter";
+import { fakeEngagement } from "@/lib/config";
 
 export default function MyPostsPage() {
   const { data: session, status } = useSession();
@@ -11,6 +13,7 @@ export default function MyPostsPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [layout, setLayout] = useState('single');
   const [isLoading, setIsLoading] = useState(true);
+  const [showFakeLikes, setShowFakeLikes] = useState(fakeEngagement.enableFakeLikes);
   
   const POSTS_PER_PAGE = layout === 'grid' ? 9 : 3;
 
@@ -49,6 +52,10 @@ export default function MyPostsPage() {
     });
 
     fetchPosts();
+  };
+
+  const toggleFakeLikes = () => {
+    setShowFakeLikes(!showFakeLikes);
   };
 
   const totalPages = Math.ceil(posts.length / POSTS_PER_PAGE);
@@ -133,6 +140,11 @@ export default function MyPostsPage() {
                 Delete Post
               </button>
             </div>
+            {showFakeLikes && (
+              <div className="mb-2">
+                <FakeLikeCounter postId={post._id} />
+              </div>
+            )}
             <p>{post.caption}</p>
           </div>
         </div>
@@ -168,9 +180,20 @@ export default function MyPostsPage() {
       <div className="max-w-4xl mx-auto pt-8 px-4">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold">My Posts</h1>
-          {posts.length > 0 && (
-            <LayoutToggle layout={layout} setLayout={setLayout} />
-          )}
+          <div className="flex items-center space-x-4">
+            <label className="flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                checked={showFakeLikes}
+                onChange={toggleFakeLikes}
+                className="form-checkbox h-4 w-4 text-blue-500"
+              />
+              <span className="ml-2 text-sm text-gray-700">Show Fake Likes</span>
+            </label>
+            {posts.length > 0 && (
+              <LayoutToggle layout={layout} setLayout={setLayout} />
+            )}
+          </div>
         </div>
         
         {posts.length === 0 ? (

@@ -8,6 +8,8 @@ import FavoriteButton from "@/components/FavoriteButton";
 import Image from "next/image";
 import LayoutToggleServer from "@/components/LayoutToggleServer";
 import { postVisibility } from "@/lib/config";
+import LikeButton from "@/components/LikeButton";
+import FakeLikeCounter from "@/components/FakeLikeCounter";
 
 export default async function UserProfile({ params, searchParams }) {
   try {
@@ -238,6 +240,14 @@ export default async function UserProfile({ params, searchParams }) {
                     </div>
                     
                     <div className="p-3">
+                      <div className="flex items-center mb-2">
+                        {session && (
+                          <LikeButton postId={post._id.toString()} />
+                        )}
+                        <div className="ml-2">
+                          <FakeLikeCounter postId={post._id.toString()} />
+                        </div>
+                      </div>
                       <p className="mb-2">
                         <span className="font-medium mr-2">{username}</span>
                         {post.caption}
