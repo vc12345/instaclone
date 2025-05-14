@@ -3,6 +3,7 @@ import cloudinary from "@/lib/cloudinary";
 import { getServerSession } from "next-auth";
 import { authOptions } from "../auth/[...nextauth]/route";
 import { ObjectId } from "mongodb";
+import { postVisibility } from "@/lib/config";
 
 export async function POST(req) {
   const session = await getServerSession(authOptions);
@@ -44,10 +45,23 @@ export async function POST(req) {
   const client = await clientPromise;
   const db = client.db("instaclone");
 
+  // Calculate the next public release time
+  const now = new Date();
+  const releaseDate = new Date(now);
+  
+  // Set the release time to the configured hour and minute
+  releaseDate.setHours(postVisibility.releaseHour, postVisibility.releaseMinute, 0, 0);
+  
+  // If current time is past today's release time, set release for tomorrow
+  if (now > releaseDate) {
+    releaseDate.setDate(releaseDate.getDate() + 1);
+  }
+
   await db.collection("posts").insertOne({
     caption: data.get("caption"),
     imageUrl: uploadResult.secure_url,
-    createdAt: new Date(),
+    createdAt: now,                // When the post was actually created
+    publicReleaseTime: releaseDate, // When the post becomes publicly visible
     username: session.user.username,
     userEmail: session.user.email,
   });
@@ -56,13 +70,41 @@ export async function POST(req) {
 }
 
 // GET = Fetch all posts
-export async function GET() {
+export async function GET(req) {
+  const session = await getServerSession(authOptions);
+  const url = new URL(req.url);
+  const viewingOwnProfile = url.searchParams.get("viewingOwnProfile") === "true";
+  
   const client = await clientPromise;
   const db = client.db("instaclone");
 
+  let query = {};
+  
+  // If not viewing own profile, only show posts that have reached their public release time
+  if (!viewingOwnProfile) {
+    query = {
+      publicReleaseTime: { $lte: new Date() }
+    };
+  }
+  
+  // If a specific username is provided, filter by that username
+  const username = url.searchParams.get("username");
+  if (username) {
+    // If viewing own profile, show all posts
+    if (viewingOwnProfile && session?.user?.username === username) {
+      query = { username };
+    } else {
+      // Otherwise, show only publicly released posts for this user
+      query = {
+        username,
+        publicReleaseTime: { $lte: new Date() }
+      };
+    }
+  }
+
   const posts = await db
     .collection("posts")
-    .find({})
+    .find(query)
     .sort({ createdAt: -1 })
     .toArray();
 

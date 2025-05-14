@@ -19,11 +19,9 @@ export default function MyPostsPage() {
     
     setIsLoading(true);
     try {
-      const res = await fetch("/api/posts");
-      const allPosts = await res.json();
-      const myPosts = allPosts.filter(
-        (post) => post.userEmail === session.user.email
-      );
+      // Pass viewingOwnProfile=true to get all posts regardless of release time
+      const res = await fetch(`/api/posts?username=${session.user.username}&viewingOwnProfile=true`);
+      const myPosts = await res.json();
       setPosts(myPosts);
     } catch (error) {
       console.error("Error fetching posts:", error);
@@ -68,6 +66,12 @@ export default function MyPostsPage() {
     });
   };
 
+  // Check if a post is scheduled for future release
+  const isScheduledPost = (post) => {
+    if (!post.publicReleaseTime) return false;
+    return new Date(post.publicReleaseTime) > new Date();
+  };
+
   const renderGridLayout = () => (
     <div className="grid grid-cols-3 gap-1 md:gap-4">
       {paginatedPosts.map((post) => (
@@ -77,8 +81,13 @@ export default function MyPostsPage() {
             alt={post.caption || "My post"} 
             fill
             sizes="(max-width: 768px) 33vw, 300px"
-            className="object-cover" 
+            className={`object-cover ${isScheduledPost(post) ? 'opacity-60' : ''}`}
           />
+          {isScheduledPost(post) && (
+            <div className="absolute top-2 right-2 bg-yellow-500 text-white text-xs px-2 py-1 rounded-full">
+              Scheduled
+            </div>
+          )}
           <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all duration-200 flex flex-col justify-between p-3 opacity-0 group-hover:opacity-100">
             <div className="text-white text-xs truncate">{post.caption}</div>
             <div className="flex justify-between items-end w-full">
@@ -106,8 +115,13 @@ export default function MyPostsPage() {
               alt={post.caption || "My post"} 
               fill
               sizes="(max-width: 768px) 100vw, 800px"
-              className="object-cover" 
+              className={`object-cover ${isScheduledPost(post) ? 'opacity-60' : ''}`}
             />
+            {isScheduledPost(post) && (
+              <div className="absolute top-4 right-4 bg-yellow-500 text-white px-3 py-1 rounded-full font-medium">
+                Scheduled for {new Date(post.publicReleaseTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+              </div>
+            )}
           </div>
           <div className="p-4">
             <div className="flex justify-between items-center mb-3">

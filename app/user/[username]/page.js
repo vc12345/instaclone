@@ -7,6 +7,7 @@ import { authOptions } from "@/lib/auth";
 import FavoriteButton from "@/components/FavoriteButton";
 import Image from "next/image";
 import LayoutToggleServer from "@/components/LayoutToggleServer";
+import { postVisibility } from "@/lib/config";
 
 export default async function UserProfile({ params, searchParams }) {
   try {
@@ -36,15 +37,19 @@ export default async function UserProfile({ params, searchParams }) {
 
     let isFavorited = false;
     let session = null;
+    let isOwnProfile = false;
     
     try {
       session = await getServerSession(authOptions);
+      
+      // Check if this is the user's own profile
+      isOwnProfile = session?.user?.username === username;
       
       // Check only if logged in AND session includes email + username
       if (
         session?.user?.email &&
         session.user?.username &&
-        session.user.username !== username
+        !isOwnProfile
       ) {
         const favorite = await db.collection("favorites").findOne({
           userEmail: session.user.email,
@@ -57,40 +62,29 @@ export default async function UserProfile({ params, searchParams }) {
       // Continue without session data
     }
     
-    // Use a safe query that doesn't depend on potentially missing fields
-    const postsQuery = { 
-      $or: [
-        { username },
-        { userEmail: user.email }
-      ]
-    };
-
-    // Count total posts with error handling
-    let totalPosts = 0;
-    let totalPages = 1;
-    try {
-      totalPosts = await db
-        .collection("posts")
-        .countDocuments(postsQuery);
-      
-      totalPages = Math.ceil(totalPosts / POSTS_PER_PAGE);
-    } catch (countError) {
-      console.error("Error counting posts:", countError);
-    }
-
-    // Fetch paginated posts with error handling
+    // Fetch posts with appropriate visibility
     let posts = [];
     try {
-      posts = await db
-        .collection("posts")
-        .find(postsQuery)
-        .sort({ createdAt: -1 })
-        .skip((currentPage - 1) * POSTS_PER_PAGE)
-        .limit(POSTS_PER_PAGE)
-        .toArray();
+      // If viewing own profile, show all posts including scheduled ones
+      if (isOwnProfile) {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || ''}/api/posts?username=${username}&viewingOwnProfile=true`, { cache: 'no-store' });
+        posts = await res.json();
+      } else {
+        // Otherwise, only show publicly released posts
+        const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || ''}/api/posts?username=${username}`, { cache: 'no-store' });
+        posts = await res.json();
+      }
     } catch (fetchError) {
       console.error("Error fetching posts:", fetchError);
     }
+
+    // Count total posts and calculate pagination
+    const totalPosts = posts.length;
+    const totalPages = Math.ceil(totalPosts / POSTS_PER_PAGE);
+    
+    // Apply pagination
+    const start = (currentPage - 1) * POSTS_PER_PAGE;
+    const paginatedPosts = posts.slice(start, start + POSTS_PER_PAGE);
 
     const formatDate = (dateString) => {
       const date = new Date(dateString);
@@ -99,6 +93,20 @@ export default async function UserProfile({ params, searchParams }) {
         day: 'numeric'
       });
     };
+
+    // Check if a post is scheduled for future release
+    const isScheduledPost = (post) => {
+      if (!post.publicReleaseTime) return false;
+      return new Date(post.publicReleaseTime) > new Date();
+    };
+
+    // Get the next release time for display
+    const nextReleaseTime = new Date();
+    nextReleaseTime.setHours(postVisibility.releaseHour, postVisibility.releaseMinute, 0, 0);
+    if (nextReleaseTime < new Date()) {
+      nextReleaseTime.setDate(nextReleaseTime.getDate() + 1);
+    }
+    const formattedReleaseTime = nextReleaseTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
 
     return (
       <div className="bg-gray-50 min-h-screen">
@@ -128,7 +136,7 @@ export default async function UserProfile({ params, searchParams }) {
             <div className="flex flex-col items-center md:items-start">
               <div className="flex items-center mb-4">
                 <h1 className="text-xl font-semibold mr-4">{username}</h1>
-                {session?.user?.username && session.user.username !== username && (
+                {session?.user?.username && !isOwnProfile && (
                   <FavoriteButton 
                     username={username} 
                     initialIsFavorited={isFavorited} 
@@ -152,15 +160,29 @@ export default async function UserProfile({ params, searchParams }) {
             </div>
           </div>
           
+          {/* Release time info for own profile */}
+          {isOwnProfile && (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6 text-sm">
+              <div className="flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 text-blue-500 mr-2">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <p className="text-blue-800">
+                  <span className="font-medium">Post Release Schedule:</span> New posts become publicly visible at {formattedReleaseTime} daily.
+                </p>
+              </div>
+            </div>
+          )}
+          
           {/* Layout Toggle and Post Grid */}
           <div className="border-t border-gray-200 pt-6">
-            {posts.length > 0 && (
+            {paginatedPosts.length > 0 && (
               <div className="mb-6">
                 <LayoutToggleServer currentLayout={layout} username={username} />
               </div>
             )}
             
-            {posts.length === 0 ? (
+            {paginatedPosts.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-12">
                 <div className="w-16 h-16 border-2 border-black rounded-full flex items-center justify-center mb-4">
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-8 h-8">
@@ -173,21 +195,26 @@ export default async function UserProfile({ params, searchParams }) {
               </div>
             ) : layout === 'grid' ? (
               <div className="grid grid-cols-3 gap-1 md:gap-4">
-                {posts.map((post) => (
+                {paginatedPosts.map((post) => (
                   <div key={post._id.toString()} className="aspect-square relative overflow-hidden bg-gray-100">
                     <Image 
                       src={post.imageUrl} 
                       alt={post.caption || "Post image"}
                       fill
                       sizes="(max-width: 768px) 33vw, 300px"
-                      className="object-cover"
+                      className={`object-cover ${isOwnProfile && isScheduledPost(post) ? 'opacity-60' : ''}`}
                     />
+                    {isOwnProfile && isScheduledPost(post) && (
+                      <div className="absolute top-2 right-2 bg-yellow-500 text-white text-xs px-2 py-1 rounded-full">
+                        Scheduled
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
             ) : (
               <div className="space-y-6">
-                {posts.map((post) => (
+                {paginatedPosts.map((post) => (
                   <div key={post._id.toString()} className="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm">
                     <div className="flex items-center p-3">
                       <div className="w-8 h-8 rounded-full bg-gray-200 mr-2 flex-shrink-0">
@@ -205,8 +232,13 @@ export default async function UserProfile({ params, searchParams }) {
                         alt={post.caption || "Post image"} 
                         fill
                         sizes="(max-width: 768px) 100vw, 800px"
-                        className="object-cover" 
+                        className={`object-cover ${isOwnProfile && isScheduledPost(post) ? 'opacity-60' : ''}`}
                       />
+                      {isOwnProfile && isScheduledPost(post) && (
+                        <div className="absolute top-4 right-4 bg-yellow-500 text-white px-3 py-1 rounded-full font-medium">
+                          Scheduled for {new Date(post.publicReleaseTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                        </div>
+                      )}
                     </div>
                     
                     <div className="p-3">
