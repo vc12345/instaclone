@@ -5,6 +5,7 @@ import Link from "next/link";
 import Header from "@/components/Header";
 import Image from "next/image";
 import LayoutToggle from "@/components/LayoutToggle";
+import { recentActivity } from "@/lib/config";
 
 export default function Home() {
   const { data: session } = useSession();
@@ -31,7 +32,7 @@ export default function Home() {
     }
   };
 
-  // Fetch users who posted in the last 24 hours
+  // Fetch users who posted recently based on config
   const fetchRecentUsers = async () => {
     setIsLoading(true);
     try {
@@ -39,10 +40,10 @@ export default function Home() {
       const res = await fetch("/api/posts");
       const data = await res.json();
       
-      // Filter posts from the last 24 hours
-      const yesterday = new Date();
-      yesterday.setDate(yesterday.getDate() - 1);
-      const recentPosts = data.filter(post => new Date(post.createdAt) > yesterday);
+      // Filter posts based on configured max age
+      const cutoffDate = new Date();
+      cutoffDate.setHours(cutoffDate.getHours() - recentActivity.maxAgeHours);
+      const recentPosts = data.filter(post => new Date(post.createdAt) > cutoffDate);
       
       // If logged in, fetch favorites to filter users
       let favUsernames = [];
@@ -169,6 +170,11 @@ export default function Home() {
     return 'just now';
   };
 
+  // Format the feed label by replacing {hours} with the actual value
+  const getFeedLabel = () => {
+    return recentActivity.feedLabel.replace('{hours}', recentActivity.maxAgeHours);
+  };
+
   return (
     <div className="bg-gray-50 min-h-screen">
       <Header />
@@ -256,7 +262,7 @@ export default function Home() {
             <h2 className="text-2xl font-bold text-gray-800">
               {session ? "Recent Activity From People You Follow" : "Recent Activity"}
             </h2>
-            <div className="text-sm text-gray-500">Last 24 hours</div>
+            <div className="text-sm text-gray-500">{getFeedLabel()}</div>
           </div>
           
           {isLoading ? (
@@ -273,8 +279,8 @@ export default function Home() {
               </h3>
               <p className="text-gray-500">
                 {session 
-                  ? "People you follow haven't posted in the last 24 hours." 
-                  : "No users have posted in the last 24 hours."}
+                  ? `People you follow haven't posted in the last ${recentActivity.maxAgeHours} hours.` 
+                  : `No users have posted in the last ${recentActivity.maxAgeHours} hours.`}
               </p>
               {session && favorites.length === 0 && (
                 <Link href="/my-favorites" className="mt-4 inline-block text-blue-500 font-medium">
@@ -311,7 +317,7 @@ export default function Home() {
                           <div>
                             <h3 className="font-bold">{user.username}</h3>
                             <p className="text-sm opacity-90">
-                              {user.postCount} {user.postCount === 1 ? 'post' : 'posts'} today
+                              {user.postCount} {user.postCount === 1 ? 'post' : 'posts'} recently
                             </p>
                           </div>
                         </div>
