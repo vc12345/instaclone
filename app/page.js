@@ -310,7 +310,7 @@ export default function Home() {
               <p className="font-medium">{uploadError.message}</p>
               {uploadError.dailyLimit && (
                 <p className="mt-2">
-                  You've uploaded {uploadError.todayUploads} posts today (limit: {uploadError.dailyLimit}).
+                  You&apos;ve uploaded {uploadError.todayUploads} posts today (limit: {uploadError.dailyLimit}).
                   <Link href="/my-posts" className="ml-2 text-blue-600 underline">
                     Go to My Posts
                   </Link> to delete some posts before uploading more.
