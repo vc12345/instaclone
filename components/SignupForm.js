@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { signIn } from "next-auth/react";
 import Link from "next/link";
 
 export default function SignupForm() {
@@ -33,8 +34,21 @@ export default function SignupForm() {
       });
 
       if (res.ok) {
-        // Redirect to login page on successful signup
-        router.push("/?login=true");
+        // Auto-login after successful signup
+        const signInResult = await signIn("credentials", {
+          redirect: false,
+          email,
+          password,
+        });
+
+        if (signInResult?.error) {
+          setError("Account created but login failed. Please try logging in manually.");
+          router.push("/?login=true");
+        } else {
+          // Redirect to home page after successful login
+          router.push("/");
+          router.refresh();
+        }
       } else {
         const errorText = await res.text();
         setError(errorText || "Signup failed. Please try again.");
