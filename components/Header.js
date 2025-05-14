@@ -44,6 +44,22 @@ export default function Header() {
     };
   }, []);
 
+  // Record profile view when clicking on a search result
+  const handleProfileClick = async (username) => {
+    if (session?.user?.email && username !== session.user.username) {
+      try {
+        await fetch("/api/viewing-history", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ viewedUsername: username }),
+        });
+      } catch (error) {
+        console.error("Error recording profile view:", error);
+      }
+    }
+    setShowSearch(false);
+  };
+
   return (
     <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 flex items-center justify-between h-16">
@@ -87,7 +103,7 @@ export default function Header() {
                   key={user.username}
                   href={`/user/${user.username}`}
                   className="flex items-center px-4 py-3 hover:bg-gray-50 border-b border-gray-100 last:border-0"
-                  onClick={() => setShowSearch(false)}
+                  onClick={() => handleProfileClick(user.username)}
                 >
                   <div className="w-8 h-8 rounded-full bg-gray-200 mr-3 flex-shrink-0 overflow-hidden">
                     {user.image ? (
@@ -184,6 +200,13 @@ export default function Header() {
                     >
                       Profile
                     </Link>
+                    <Link 
+                      href="/viewing-history"
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      onClick={() => setShowMenu(false)}
+                    >
+                      Viewing History
+                    </Link>
                     <button
                       onClick={() => {
                         signOut();
@@ -242,7 +265,7 @@ export default function Header() {
                 key={user.username}
                 href={`/user/${user.username}`}
                 className="flex items-center px-4 py-3 hover:bg-gray-50 border-b border-gray-100"
-                onClick={() => setShowSearch(false)}
+                onClick={() => handleProfileClick(user.username)}
               >
                 <div className="w-8 h-8 rounded-full bg-gray-200 mr-3 flex-shrink-0">
                   {user.image ? (
