@@ -23,54 +23,6 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState(searchParams.get("login") === "true" ? "login" : "signup");
   const fileInputRef = useRef(null);
 
-  // If user is not logged in, show login/signup forms
-  if (status === "loading") {
-    return (
-      <div className="bg-gray-50 min-h-screen">
-        <Header />
-        <div className="max-w-4xl mx-auto pt-8 px-4 flex justify-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-        </div>
-      </div>
-    );
-  }
-
-  if (!session) {
-    return (
-      <div className="bg-gray-50 min-h-screen">
-        <Header />
-        <div className="max-w-md mx-auto pt-8 px-4 pb-16">
-          <div className="mb-6">
-            <div className="flex border-b border-gray-200">
-              <button
-                className={`py-2 px-4 font-medium ${
-                  activeTab === "login"
-                    ? "border-b-2 border-blue-500 text-blue-600"
-                    : "text-gray-500 hover:text-gray-700"
-                }`}
-                onClick={() => setActiveTab("login")}
-              >
-                Log In
-              </button>
-              <button
-                className={`py-2 px-4 font-medium ${
-                  activeTab === "signup"
-                    ? "border-b-2 border-blue-500 text-blue-600"
-                    : "text-gray-500 hover:text-gray-700"
-                }`}
-                onClick={() => setActiveTab("signup")}
-              >
-                Sign Up
-              </button>
-            </div>
-          </div>
-
-          {activeTab === "login" ? <LoginForm /> : <SignupForm />}
-        </div>
-      </div>
-    );
-  }
-
   // Fetch user's favorites
   const fetchFavorites = async () => {
     if (!session?.user?.email) return [];
@@ -148,7 +100,7 @@ export default function Home() {
     if (session) {
       fetchRecentUsers();
     }
-  }, [session]);
+  }, [session, fetchRecentUsers]);
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
@@ -229,6 +181,54 @@ export default function Home() {
   const getFeedLabel = () => {
     return recentActivity.feedLabel.replace('{hours}', recentActivity.maxAgeHours);
   };
+
+  // If user is not logged in, show login/signup forms
+  if (status === "loading") {
+    return (
+      <div className="bg-gray-50 min-h-screen">
+        <Header />
+        <div className="max-w-4xl mx-auto pt-8 px-4 flex justify-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!session) {
+    return (
+      <div className="bg-gray-50 min-h-screen">
+        <Header />
+        <div className="max-w-md mx-auto pt-8 px-4 pb-16">
+          <div className="mb-6">
+            <div className="flex border-b border-gray-200">
+              <button
+                className={`py-2 px-4 font-medium ${
+                  activeTab === "login"
+                    ? "border-b-2 border-blue-500 text-blue-600"
+                    : "text-gray-500 hover:text-gray-700"
+                }`}
+                onClick={() => setActiveTab("login")}
+              >
+                Log In
+              </button>
+              <button
+                className={`py-2 px-4 font-medium ${
+                  activeTab === "signup"
+                    ? "border-b-2 border-blue-500 text-blue-600"
+                    : "text-gray-500 hover:text-gray-700"
+                }`}
+                onClick={() => setActiveTab("signup")}
+              >
+                Sign Up
+              </button>
+            </div>
+          </div>
+
+          {activeTab === "login" ? <LoginForm /> : <SignupForm />}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-gray-50 min-h-screen">
@@ -327,7 +327,7 @@ export default function Home() {
               </svg>
               <h3 className="text-xl font-light mb-1">No Recent Activity From People You Follow</h3>
               <p className="text-gray-500">
-                People you follow haven't posted in the last {recentActivity.maxAgeHours} hours.
+                People you follow haven&apos;t posted in the last {recentActivity.maxAgeHours} hours.
               </p>
               {favorites.length === 0 && (
                 <Link href="/my-favorites" className="mt-4 inline-block text-blue-500 font-medium">
