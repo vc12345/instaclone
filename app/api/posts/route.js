@@ -1,9 +1,15 @@
 import clientPromise from "@/lib/mongodb";
 import cloudinary from "@/lib/cloudinary";
 import { getServerSession } from "next-auth";
-import { authOptions } from "../auth/[...nextauth]/route";
+import { authOptions } from "@/lib/auth";
 import { ObjectId } from "mongodb";
 import { postVisibility } from "@/lib/config";
+import { NextResponse } from "next/server";
+
+// Cache control headers for better performance
+const cacheHeaders = {
+  "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300"
+};
 
 export async function POST(req) {
   const session = await getServerSession(authOptions);
@@ -74,6 +80,10 @@ export async function GET(req) {
   const session = await getServerSession(authOptions);
   const url = new URL(req.url);
   const viewingOwnProfile = url.searchParams.get("viewingOwnProfile") === "true";
+  const username = url.searchParams.get("username");
+  const page = parseInt(url.searchParams.get("page") || "1");
+  const limit = parseInt(url.searchParams.get("limit") || "20");
+  const skip = (page - 1) * limit;
   
   const client = await clientPromise;
   const db = client.db("instaclone");
@@ -88,7 +98,6 @@ export async function GET(req) {
   }
   
   // If a specific username is provided, filter by that username
-  const username = url.searchParams.get("username");
   if (username) {
     // If viewing own profile, show all posts
     if (viewingOwnProfile && session?.user?.username === username) {
@@ -102,15 +111,31 @@ export async function GET(req) {
     }
   }
 
+  // Get total count for pagination
+  const totalCount = await db.collection("posts").countDocuments(query);
+
+  // Fetch posts with pagination
   const posts = await db
     .collection("posts")
     .find(query)
     .sort({ createdAt: -1 })
+    .skip(skip)
+    .limit(limit)
     .toArray();
 
-  return new Response(JSON.stringify(posts), {
-    headers: { "Content-Type": "application/json" },
-  });
+  // Return with pagination metadata
+  return NextResponse.json(
+    {
+      posts,
+      pagination: {
+        total: totalCount,
+        page,
+        limit,
+        pages: Math.ceil(totalCount / limit)
+      }
+    },
+    { headers: cacheHeaders }
+  );
 }
 
 // DELETE = Remove a post

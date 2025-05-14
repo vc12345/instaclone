@@ -1,11 +1,12 @@
 "use client";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { useSession } from "next-auth/react";
 import Header from "@/components/Header";
 import Image from "next/image";
 import LayoutToggle from "@/components/LayoutToggle";
-import FakeLikeCounter from "@/components/FakeLikeCounter";
-import { fakeEngagement } from "@/lib/config";
+import PostCard from "@/components/PostCard";
+import OptimizedImage from "@/components/OptimizedImage";
+import { formatDate } from "@/lib/utils";
 
 export default function MyPostsPage() {
   const { data: session, status } = useSession();
@@ -13,31 +14,36 @@ export default function MyPostsPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [layout, setLayout] = useState('single');
   const [isLoading, setIsLoading] = useState(true);
+  const [totalPages, setTotalPages] = useState(1);
   
-  const POSTS_PER_PAGE = layout === 'grid' ? 9 : 3;
+  const POSTS_PER_PAGE = useMemo(() => layout === 'grid' ? 9 : 3, [layout]);
 
-  const fetchPosts = useCallback(async () => {
+  const fetchPosts = useCallback(async (page = 1) => {
     if (!session?.user?.email) return;
     
     setIsLoading(true);
     try {
       // Pass viewingOwnProfile=true to get all posts regardless of release time
-      const res = await fetch(`/api/posts?username=${session.user.username}&viewingOwnProfile=true`);
-      const myPosts = await res.json();
-      setPosts(myPosts);
+      const res = await fetch(
+        `/api/posts?username=${session.user.username}&viewingOwnProfile=true&page=${page}&limit=${POSTS_PER_PAGE}`
+      );
+      const data = await res.json();
+      setPosts(data.posts);
+      setTotalPages(data.pagination.pages);
+      setCurrentPage(data.pagination.page);
     } catch (error) {
       console.error("Error fetching posts:", error);
       setPosts([]);
     } finally {
       setIsLoading(false);
     }
-  }, [session]);
+  }, [session, POSTS_PER_PAGE]);
 
   useEffect(() => {
     if (session) {
-      fetchPosts();
+      fetchPosts(currentPage);
     }
-  }, [session, fetchPosts]);
+  }, [session, fetchPosts, currentPage]);
 
   const handleDelete = async (id) => {
     if (!confirm("Are you sure you want to delete this post?")) return;
@@ -50,7 +56,7 @@ export default function MyPostsPage() {
       body: JSON.stringify({ id }),
     });
 
-    fetchPosts();
+    fetchPosts(currentPage);
   };
 
   // Handle layout change - reset to page 1
@@ -58,32 +64,17 @@ export default function MyPostsPage() {
     setCurrentPage(1);
   };
 
-  const totalPages = Math.ceil(posts.length / POSTS_PER_PAGE);
-  const start = (currentPage - 1) * POSTS_PER_PAGE;
-  const paginatedPosts = posts.slice(start, start + POSTS_PER_PAGE);
-
-  const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { 
-      year: 'numeric',
-      month: 'short', 
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
-
   // Check if a post is scheduled for future release
-  const isScheduledPost = (post) => {
+  const isScheduledPost = useCallback((post) => {
     if (!post.publicReleaseTime) return false;
     return new Date(post.publicReleaseTime) > new Date();
-  };
+  }, []);
 
   const renderGridLayout = () => (
     <div className="grid grid-cols-3 gap-1 md:gap-4">
-      {paginatedPosts.map((post) => (
+      {posts.map((post) => (
         <div key={post._id} className="aspect-square relative overflow-hidden bg-gray-100 group">
-          <Image 
+          <OptimizedImage 
             src={post.imageUrl} 
             alt={post.caption || "My post"} 
             fill
@@ -114,38 +105,13 @@ export default function MyPostsPage() {
 
   const renderSingleLayout = () => (
     <div className="space-y-6">
-      {paginatedPosts.map((post) => (
-        <div key={post._id} className="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm">
-          <div className="relative w-full h-[400px]">
-            <Image 
-              src={post.imageUrl} 
-              alt={post.caption || "My post"} 
-              fill
-              sizes="(max-width: 768px) 100vw, 800px"
-              className={`object-cover ${isScheduledPost(post) ? 'opacity-60' : ''}`}
-            />
-            {isScheduledPost(post) && (
-              <div className="absolute top-4 right-4 bg-yellow-500 text-white px-3 py-1 rounded-full font-medium">
-                Scheduled for {new Date(post.publicReleaseTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
-              </div>
-            )}
-          </div>
-          <div className="p-4">
-            <div className="flex justify-between items-center mb-3">
-              <span className="text-sm text-gray-500">{formatDate(post.createdAt)}</span>
-              <button
-                onClick={() => handleDelete(post._id)}
-                className="text-red-500 text-sm font-medium hover:text-red-600 transition-colors"
-              >
-                Delete Post
-              </button>
-            </div>
-            <div className="mb-2">
-              <FakeLikeCounter postId={post._id} />
-            </div>
-            <p>{post.caption}</p>
-          </div>
-        </div>
+      {posts.map((post) => (
+        <PostCard 
+          key={post._id} 
+          post={post} 
+          isOwnProfile={true}
+          onDelete={handleDelete}
+        />
       ))}
     </div>
   );
@@ -202,7 +168,7 @@ export default function MyPostsPage() {
           layout === 'grid' ? renderGridLayout() : renderSingleLayout()
         )}
 
-        {posts.length > POSTS_PER_PAGE && (
+        {totalPages > 1 && (
           <div className="flex justify-center mt-8 pb-8">
             <div className="flex items-center space-x-4">
               <button
