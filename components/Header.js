@@ -3,6 +3,7 @@ import { useSession, signIn, signOut } from "next-auth/react";
 import Link from "next/link";
 import { useEffect, useState, useRef } from "react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 
 export default function Header() {
   const { data: session } = useSession();
@@ -12,6 +13,7 @@ export default function Header() {
   const [showMenu, setShowMenu] = useState(false);
   const searchRef = useRef(null);
   const menuRef = useRef(null);
+  const router = useRouter();
 
   useEffect(() => {
     const delayDebounce = setTimeout(async () => {
@@ -39,13 +41,17 @@ export default function Header() {
     }
 
     document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("touchend", handleClickOutside);
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("touchend", handleClickOutside);
     };
   }, []);
 
-  // Record profile view when clicking on a search result
-  const handleProfileClick = async (username) => {
+  // Record profile view and navigate to profile
+  const handleProfileClick = async (username, e) => {
+    e.preventDefault(); // Prevent default link behavior
+    
     if (session?.user?.email && username !== session.user.username) {
       try {
         await fetch("/api/viewing-history", {
@@ -57,7 +63,9 @@ export default function Header() {
         console.error("Error recording profile view:", error);
       }
     }
+    
     setShowSearch(false);
+    router.push(`/user/${username}`);
   };
 
   return (
@@ -100,11 +108,11 @@ export default function Header() {
             {showSearch && results.length > 0 && (
               <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-md shadow-lg z-10 max-h-80 overflow-y-auto">
                 {results.map((user) => (
-                  <Link
+                  <a
                     key={user.username}
                     href={`/user/${user.username}`}
                     className="flex items-center px-4 py-3 hover:bg-gray-50 border-b border-gray-100 last:border-0"
-                    onClick={() => handleProfileClick(user.username)}
+                    onClick={(e) => handleProfileClick(user.username, e)}
                   >
                     <div className="w-8 h-8 rounded-full bg-gray-200 mr-3 flex-shrink-0 overflow-hidden">
                       {user.image ? (
@@ -127,7 +135,7 @@ export default function Header() {
                       <p className="font-medium">{user.username}</p>
                       {user.name && <p className="text-sm text-gray-500">{user.name}</p>}
                     </div>
-                  </Link>
+                  </a>
                 ))}
               </div>
             )}
@@ -263,11 +271,15 @@ export default function Header() {
           {showSearch && results.length > 0 && (
             <div className="absolute left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-10 max-h-80 overflow-y-auto">
               {results.map((user) => (
-                <Link
+                <a
                   key={user.username}
                   href={`/user/${user.username}`}
-                  className="flex items-center px-4 py-3 hover:bg-gray-50 border-b border-gray-100"
-                  onClick={() => handleProfileClick(user.username)}
+                  className="flex items-center px-4 py-3 hover:bg-gray-50 border-b border-gray-100 active:bg-gray-100"
+                  onClick={(e) => handleProfileClick(user.username, e)}
+                  onTouchEnd={(e) => {
+                    e.preventDefault(); // Prevent default touch behavior
+                    handleProfileClick(user.username, e);
+                  }}
                 >
                   <div className="w-8 h-8 rounded-full bg-gray-200 mr-3 flex-shrink-0">
                     {user.image ? (
@@ -290,7 +302,7 @@ export default function Header() {
                     <p className="font-medium">{user.username}</p>
                     {user.name && <p className="text-sm text-gray-500">{user.name}</p>}
                   </div>
-                </Link>
+                </a>
               ))}
             </div>
           )}
