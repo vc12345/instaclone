@@ -2,13 +2,17 @@
 import { useEffect, useState, useRef } from "react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import Header from "@/components/Header";
 import Image from "next/image";
 import LayoutToggle from "@/components/LayoutToggle";
 import { recentActivity } from "@/lib/config";
+import LoginForm from "@/components/LoginForm";
+import SignupForm from "@/components/SignupForm";
 
 export default function Home() {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
+  const searchParams = useSearchParams();
   const [caption, setCaption] = useState("");
   const [image, setImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
@@ -16,7 +20,56 @@ export default function Home() {
   const [isUploading, setIsUploading] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [favorites, setFavorites] = useState([]);
+  const [activeTab, setActiveTab] = useState(searchParams.get("login") === "true" ? "login" : "signup");
   const fileInputRef = useRef(null);
+
+  // If user is not logged in, show login/signup forms
+  if (status === "loading") {
+    return (
+      <div className="bg-gray-50 min-h-screen">
+        <Header />
+        <div className="max-w-4xl mx-auto pt-8 px-4 flex justify-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!session) {
+    return (
+      <div className="bg-gray-50 min-h-screen">
+        <Header />
+        <div className="max-w-md mx-auto pt-8 px-4 pb-16">
+          <div className="mb-6">
+            <div className="flex border-b border-gray-200">
+              <button
+                className={`py-2 px-4 font-medium ${
+                  activeTab === "login"
+                    ? "border-b-2 border-blue-500 text-blue-600"
+                    : "text-gray-500 hover:text-gray-700"
+                }`}
+                onClick={() => setActiveTab("login")}
+              >
+                Log In
+              </button>
+              <button
+                className={`py-2 px-4 font-medium ${
+                  activeTab === "signup"
+                    ? "border-b-2 border-blue-500 text-blue-600"
+                    : "text-gray-500 hover:text-gray-700"
+                }`}
+                onClick={() => setActiveTab("signup")}
+              >
+                Sign Up
+              </button>
+            </div>
+          </div>
+
+          {activeTab === "login" ? <LoginForm /> : <SignupForm />}
+        </div>
+      </div>
+    );
+  }
 
   // Fetch user's favorites
   const fetchFavorites = async () => {
@@ -92,7 +145,9 @@ export default function Home() {
   };
 
   useEffect(() => {
-    fetchRecentUsers();
+    if (session) {
+      fetchRecentUsers();
+    }
   }, [session]);
 
   const handleImageChange = (e) => {
@@ -180,88 +235,84 @@ export default function Home() {
       <Header />
       
       <main className="max-w-4xl mx-auto pt-6 pb-16 px-4">
-        {session && (
-          <div className="bg-white border border-gray-200 rounded-lg p-4 mb-6 shadow-sm">
-            <h2 className="text-lg font-semibold mb-4">Create Post</h2>
-            <form onSubmit={handleSubmit}>
-              <div className="mb-4">
-                <textarea
-                  value={caption}
-                  onChange={(e) => setCaption(e.target.value)}
-                  placeholder="Write a caption..."
-                  className="w-full border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                  rows="3"
-                />
-              </div>
-              
-              <div className="mb-4">
-                {imagePreview ? (
-                  <div className="relative">
-                    <div className="relative w-full h-64">
-                      <Image 
-                        src={imagePreview} 
-                        alt="Preview" 
-                        fill
-                        className="object-cover rounded-md" 
-                      />
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setImage(null);
-                        setImagePreview(null);
-                        if (fileInputRef.current) {
-                          fileInputRef.current.value = "";
-                        }
-                      }}
-                      className="absolute top-2 right-2 bg-white rounded-full p-1 shadow-md"
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                      </svg>
-                    </button>
+        <div className="bg-white border border-gray-200 rounded-lg p-4 mb-6 shadow-sm">
+          <h2 className="text-lg font-semibold mb-4">Create Post</h2>
+          <form onSubmit={handleSubmit}>
+            <div className="mb-4">
+              <textarea
+                value={caption}
+                onChange={(e) => setCaption(e.target.value)}
+                placeholder="Write a caption..."
+                className="w-full border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                rows="3"
+              />
+            </div>
+            
+            <div className="mb-4">
+              {imagePreview ? (
+                <div className="relative">
+                  <div className="relative w-full h-64">
+                    <Image 
+                      src={imagePreview} 
+                      alt="Preview" 
+                      fill
+                      className="object-cover rounded-md" 
+                    />
                   </div>
-                ) : (
-                  <div 
-                    onClick={() => fileInputRef.current?.click()}
-                    className="border-2 border-dashed border-gray-300 rounded-md p-8 text-center cursor-pointer hover:bg-gray-50"
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setImage(null);
+                      setImagePreview(null);
+                      if (fileInputRef.current) {
+                        fileInputRef.current.value = "";
+                      }
+                    }}
+                    className="absolute top-2 right-2 bg-white rounded-full p-1 shadow-md"
                   >
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-10 h-10 mx-auto text-gray-400 mb-2">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                     </svg>
-                    <p className="text-gray-500">Click to upload an image</p>
-                  </div>
-                )}
-                <input 
-                  type="file" 
-                  ref={fileInputRef}
-                  onChange={handleImageChange} 
-                  accept="image/*"
-                  className="hidden" 
-                />
-              </div>
-              
-              <button 
-                type="submit" 
-                disabled={isUploading || !image}
-                className={`w-full py-2 px-4 rounded-md font-medium ${
-                  isUploading || !image
-                    ? "bg-blue-300 cursor-not-allowed"
-                    : "bg-blue-500 hover:bg-blue-600"
-                } text-white transition duration-200`}
-              >
-                {isUploading ? "Uploading..." : "Share"}
-              </button>
-            </form>
-          </div>
-        )}
+                  </button>
+                </div>
+              ) : (
+                <div 
+                  onClick={() => fileInputRef.current?.click()}
+                  className="border-2 border-dashed border-gray-300 rounded-md p-8 text-center cursor-pointer hover:bg-gray-50"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-10 h-10 mx-auto text-gray-400 mb-2">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+                  </svg>
+                  <p className="text-gray-500">Click to upload an image</p>
+                </div>
+              )}
+              <input 
+                type="file" 
+                ref={fileInputRef}
+                onChange={handleImageChange} 
+                accept="image/*"
+                className="hidden" 
+              />
+            </div>
+            
+            <button 
+              type="submit" 
+              disabled={isUploading || !image}
+              className={`w-full py-2 px-4 rounded-md font-medium ${
+                isUploading || !image
+                  ? "bg-blue-300 cursor-not-allowed"
+                  : "bg-blue-500 hover:bg-blue-600"
+              } text-white transition duration-200`}
+            >
+              {isUploading ? "Uploading..." : "Share"}
+            </button>
+          </form>
+        </div>
 
         {/* Recent Active Users Section */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-2xl font-bold text-gray-800">
-              {session ? "Recent Activity From People You Follow" : "Recent Activity"}
-            </h2>
+            <h2 className="text-2xl font-bold text-gray-800">Recent Activity From People You Follow</h2>
             <div className="text-sm text-gray-500">{getFeedLabel()}</div>
           </div>
           
@@ -274,15 +325,11 @@ export default function Home() {
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-12 h-12 mx-auto text-gray-400 mb-3">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
               </svg>
-              <h3 className="text-xl font-light mb-1">
-                {session ? "No Recent Activity From People You Follow" : "No Recent Activity"}
-              </h3>
+              <h3 className="text-xl font-light mb-1">No Recent Activity From People You Follow</h3>
               <p className="text-gray-500">
-                {session 
-                  ? `People you follow haven't posted in the last ${recentActivity.maxAgeHours} hours.` 
-                  : `No users have posted in the last ${recentActivity.maxAgeHours} hours.`}
+                People you follow haven't posted in the last {recentActivity.maxAgeHours} hours.
               </p>
-              {session && favorites.length === 0 && (
+              {favorites.length === 0 && (
                 <Link href="/my-favorites" className="mt-4 inline-block text-blue-500 font-medium">
                   Follow Users
                 </Link>

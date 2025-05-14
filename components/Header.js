@@ -15,7 +15,7 @@ export default function Header() {
 
   useEffect(() => {
     const delayDebounce = setTimeout(async () => {
-      if (searchTerm.trim()) {
+      if (searchTerm.trim() && session) {
         const res = await fetch(`/api/search-users?query=${searchTerm}`);
         const users = await res.json();
         setResults(users);
@@ -25,7 +25,7 @@ export default function Header() {
     }, 300); // debounce
 
     return () => clearTimeout(delayDebounce);
-  }, [searchTerm]);
+  }, [searchTerm, session]);
 
   // Close search results when clicking outside
   useEffect(() => {
@@ -70,78 +70,79 @@ export default function Header() {
           </Link>
         </div>
 
-        {/* Search */}
-        <div className="relative hidden md:block" ref={searchRef}>
-          <div className="relative">
-            <input
-              type="text"
-              value={searchTerm}
-              onChange={(e) => {
-                setSearchTerm(e.target.value);
-                setShowSearch(true);
-              }}
-              onFocus={() => setShowSearch(true)}
-              placeholder="Search"
-              className="bg-gray-100 rounded-lg py-1 px-3 text-sm w-64 focus:outline-none"
-            />
-            {searchTerm && (
-              <button
-                onClick={() => {
-                  setSearchTerm("");
-                  setResults([]);
+        {/* Search - Only shown to logged in users */}
+        {session && (
+          <div className="relative hidden md:block" ref={searchRef}>
+            <div className="relative">
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={(e) => {
+                  setSearchTerm(e.target.value);
+                  setShowSearch(true);
                 }}
-                className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400"
-              >
-                ✕
-              </button>
+                onFocus={() => setShowSearch(true)}
+                placeholder="Search"
+                className="bg-gray-100 rounded-lg py-1 px-3 text-sm w-64 focus:outline-none"
+              />
+              {searchTerm && (
+                <button
+                  onClick={() => {
+                    setSearchTerm("");
+                    setResults([]);
+                  }}
+                  className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
+            {showSearch && results.length > 0 && (
+              <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-md shadow-lg z-10 max-h-80 overflow-y-auto">
+                {results.map((user) => (
+                  <Link
+                    key={user.username}
+                    href={`/user/${user.username}`}
+                    className="flex items-center px-4 py-3 hover:bg-gray-50 border-b border-gray-100 last:border-0"
+                    onClick={() => handleProfileClick(user.username)}
+                  >
+                    <div className="w-8 h-8 rounded-full bg-gray-200 mr-3 flex-shrink-0 overflow-hidden">
+                      {user.image ? (
+                        <div className="relative w-full h-full">
+                          <Image 
+                            src={user.image} 
+                            alt="" 
+                            fill
+                            sizes="32px"
+                            className="object-cover" 
+                          />
+                        </div>
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-blue-100 text-blue-500 font-bold">
+                          {user.username.charAt(0).toUpperCase()}
+                        </div>
+                      )}
+                    </div>
+                    <div>
+                      <p className="font-medium">{user.username}</p>
+                      {user.name && <p className="text-sm text-gray-500">{user.name}</p>}
+                    </div>
+                  </Link>
+                ))}
+              </div>
             )}
           </div>
-          {showSearch && results.length > 0 && (
-            <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-md shadow-lg z-10 max-h-80 overflow-y-auto">
-              {results.map((user) => (
-                <Link
-                  key={user.username}
-                  href={`/user/${user.username}`}
-                  className="flex items-center px-4 py-3 hover:bg-gray-50 border-b border-gray-100 last:border-0"
-                  onClick={() => handleProfileClick(user.username)}
-                >
-                  <div className="w-8 h-8 rounded-full bg-gray-200 mr-3 flex-shrink-0 overflow-hidden">
-                    {user.image ? (
-                      <div className="relative w-full h-full">
-                        <Image 
-                          src={user.image} 
-                          alt="" 
-                          fill
-                          sizes="32px"
-                          className="object-cover" 
-                        />
-                      </div>
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-blue-100 text-blue-500 font-bold">
-                        {user.username.charAt(0).toUpperCase()}
-                      </div>
-                    )}
-                  </div>
-                  <div>
-                    <p className="font-medium">{user.username}</p>
-                    {user.name && <p className="text-sm text-gray-500">{user.name}</p>}
-                  </div>
-                </Link>
-              ))}
-            </div>
-          )}
-        </div>
+        )}
 
         {/* Navigation */}
         <nav className="flex items-center space-x-5">
-          <Link href="/" className="text-gray-800 hover:text-black">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
-            </svg>
-          </Link>
-
           {session && (
             <>
+              <Link href="/" className="text-gray-800 hover:text-black">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
+                </svg>
+              </Link>
               <Link href="/my-posts" className="text-gray-800 hover:text-black">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v6m3-3H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -243,56 +244,58 @@ export default function Header() {
         </nav>
       </div>
       
-      {/* Mobile Search */}
-      <div className="md:hidden px-4 pb-3">
-        <div className="relative">
-          <input
-            type="text"
-            value={searchTerm}
-            onChange={(e) => {
-              setSearchTerm(e.target.value);
-              setShowSearch(true);
-            }}
-            onFocus={() => setShowSearch(true)}
-            placeholder="Search"
-            className="bg-gray-100 rounded-lg py-1 px-3 text-sm w-full focus:outline-none"
-          />
-        </div>
-        {showSearch && results.length > 0 && (
-          <div className="absolute left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-10 max-h-80 overflow-y-auto">
-            {results.map((user) => (
-              <Link
-                key={user.username}
-                href={`/user/${user.username}`}
-                className="flex items-center px-4 py-3 hover:bg-gray-50 border-b border-gray-100"
-                onClick={() => handleProfileClick(user.username)}
-              >
-                <div className="w-8 h-8 rounded-full bg-gray-200 mr-3 flex-shrink-0">
-                  {user.image ? (
-                    <div className="relative w-full h-full">
-                      <Image 
-                        src={user.image} 
-                        alt="" 
-                        fill
-                        sizes="32px"
-                        className="object-cover" 
-                      />
-                    </div>
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-blue-100 text-blue-500 font-bold">
-                      {user.username.charAt(0).toUpperCase()}
-                    </div>
-                  )}
-                </div>
-                <div>
-                  <p className="font-medium">{user.username}</p>
-                  {user.name && <p className="text-sm text-gray-500">{user.name}</p>}
-                </div>
-              </Link>
-            ))}
+      {/* Mobile Search - Only shown to logged in users */}
+      {session && (
+        <div className="md:hidden px-4 pb-3">
+          <div className="relative">
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                setShowSearch(true);
+              }}
+              onFocus={() => setShowSearch(true)}
+              placeholder="Search"
+              className="bg-gray-100 rounded-lg py-1 px-3 text-sm w-full focus:outline-none"
+            />
           </div>
-        )}
-      </div>
+          {showSearch && results.length > 0 && (
+            <div className="absolute left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-10 max-h-80 overflow-y-auto">
+              {results.map((user) => (
+                <Link
+                  key={user.username}
+                  href={`/user/${user.username}`}
+                  className="flex items-center px-4 py-3 hover:bg-gray-50 border-b border-gray-100"
+                  onClick={() => handleProfileClick(user.username)}
+                >
+                  <div className="w-8 h-8 rounded-full bg-gray-200 mr-3 flex-shrink-0">
+                    {user.image ? (
+                      <div className="relative w-full h-full">
+                        <Image 
+                          src={user.image} 
+                          alt="" 
+                          fill
+                          sizes="32px"
+                          className="object-cover" 
+                        />
+                      </div>
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-blue-100 text-blue-500 font-bold">
+                        {user.username.charAt(0).toUpperCase()}
+                      </div>
+                    )}
+                  </div>
+                  <div>
+                    <p className="font-medium">{user.username}</p>
+                    {user.name && <p className="text-sm text-gray-500">{user.name}</p>}
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
     </header>
   );
 }
