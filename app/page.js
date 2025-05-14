@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback, Suspense } from "react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
@@ -10,9 +10,45 @@ import { recentActivity } from "@/lib/config";
 import LoginForm from "@/components/LoginForm";
 import SignupForm from "@/components/SignupForm";
 
+// Component to handle the tab selection with useSearchParams
+function AuthTabs() {
+  const searchParams = useSearchParams();
+  const [activeTab, setActiveTab] = useState(searchParams.get("login") === "true" ? "login" : "signup");
+  
+  return (
+    <>
+      <div className="mb-6">
+        <div className="flex border-b border-gray-200">
+          <button
+            className={`py-2 px-4 font-medium ${
+              activeTab === "login"
+                ? "border-b-2 border-blue-500 text-blue-600"
+                : "text-gray-500 hover:text-gray-700"
+            }`}
+            onClick={() => setActiveTab("login")}
+          >
+            Log In
+          </button>
+          <button
+            className={`py-2 px-4 font-medium ${
+              activeTab === "signup"
+                ? "border-b-2 border-blue-500 text-blue-600"
+                : "text-gray-500 hover:text-gray-700"
+            }`}
+            onClick={() => setActiveTab("signup")}
+          >
+            Sign Up
+          </button>
+        </div>
+      </div>
+
+      {activeTab === "login" ? <LoginForm /> : <SignupForm />}
+    </>
+  );
+}
+
 export default function Home() {
   const { data: session, status } = useSession();
-  const searchParams = useSearchParams();
   const [caption, setCaption] = useState("");
   const [image, setImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
@@ -20,11 +56,10 @@ export default function Home() {
   const [isUploading, setIsUploading] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [favorites, setFavorites] = useState([]);
-  const [activeTab, setActiveTab] = useState(searchParams.get("login") === "true" ? "login" : "signup");
   const fileInputRef = useRef(null);
 
   // Fetch user's favorites
-  const fetchFavorites = async () => {
+  const fetchFavorites = useCallback(async () => {
     if (!session?.user?.email) return [];
     
     try {
@@ -35,10 +70,25 @@ export default function Home() {
       console.error("Error fetching favorites:", error);
       return [];
     }
-  };
+  }, [session?.user?.email]);
+
+  // Helper function to process posts into unique users with their stats
+  const processPostsToUsers = useCallback((posts) => {
+    return Array.from(new Set(posts.map(post => post.username)))
+      .map(username => {
+        const userPosts = posts.filter(post => post.username === username);
+        return {
+          username,
+          postCount: userPosts.length,
+          latestPost: userPosts.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))[0],
+          latestImage: userPosts.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))[0]?.imageUrl
+        };
+      })
+      .sort((a, b) => b.postCount - a.postCount); // Sort by post count
+  }, []);
 
   // Fetch users who posted recently based on config
-  const fetchRecentUsers = async () => {
+  const fetchRecentUsers = useCallback(async () => {
     setIsLoading(true);
     try {
       // Get all posts
@@ -79,22 +129,7 @@ export default function Home() {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  // Helper function to process posts into unique users with their stats
-  const processPostsToUsers = (posts) => {
-    return Array.from(new Set(posts.map(post => post.username)))
-      .map(username => {
-        const userPosts = posts.filter(post => post.username === username);
-        return {
-          username,
-          postCount: userPosts.length,
-          latestPost: userPosts.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))[0],
-          latestImage: userPosts.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))[0]?.imageUrl
-        };
-      })
-      .sort((a, b) => b.postCount - a.postCount); // Sort by post count
-  };
+  }, [session?.user?.email, fetchFavorites, processPostsToUsers]);
 
   useEffect(() => {
     if (session) {
@@ -199,32 +234,9 @@ export default function Home() {
       <div className="bg-gray-50 min-h-screen">
         <Header />
         <div className="max-w-md mx-auto pt-8 px-4 pb-16">
-          <div className="mb-6">
-            <div className="flex border-b border-gray-200">
-              <button
-                className={`py-2 px-4 font-medium ${
-                  activeTab === "login"
-                    ? "border-b-2 border-blue-500 text-blue-600"
-                    : "text-gray-500 hover:text-gray-700"
-                }`}
-                onClick={() => setActiveTab("login")}
-              >
-                Log In
-              </button>
-              <button
-                className={`py-2 px-4 font-medium ${
-                  activeTab === "signup"
-                    ? "border-b-2 border-blue-500 text-blue-600"
-                    : "text-gray-500 hover:text-gray-700"
-                }`}
-                onClick={() => setActiveTab("signup")}
-              >
-                Sign Up
-              </button>
-            </div>
-          </div>
-
-          {activeTab === "login" ? <LoginForm /> : <SignupForm />}
+          <Suspense fallback={<div>Loading...</div>}>
+            <AuthTabs />
+          </Suspense>
         </div>
       </div>
     );
