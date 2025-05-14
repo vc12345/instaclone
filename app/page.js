@@ -6,7 +6,7 @@ import { useSearchParams } from "next/navigation";
 import Header from "@/components/Header";
 import Image from "next/image";
 import LayoutToggle from "@/components/LayoutToggle";
-import { recentActivity } from "@/lib/config";
+import { recentActivity, uploadLimits } from "@/lib/config";
 import LoginForm from "@/components/LoginForm";
 import SignupForm from "@/components/SignupForm";
 
@@ -56,7 +56,34 @@ export default function Home() {
   const [isUploading, setIsUploading] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [favorites, setFavorites] = useState([]);
+  const [uploadStats, setUploadStats] = useState(null);
+  const [uploadError, setUploadError] = useState(null);
   const fileInputRef = useRef(null);
+
+  // Fetch user's upload stats
+  const fetchUploadStats = useCallback(async () => {
+    if (!session?.user?.email) return;
+    
+    try {
+      const res = await fetch("/api/posts", {
+        method: "HEAD",
+      });
+      
+      if (res.ok) {
+        const dailyLimit = parseInt(res.headers.get("X-Daily-Limit") || "0");
+        const todayUploads = parseInt(res.headers.get("X-Today-Uploads") || "0");
+        const remainingUploads = parseInt(res.headers.get("X-Remaining-Uploads") || "0");
+        
+        setUploadStats({
+          dailyLimit,
+          todayUploads,
+          remainingUploads
+        });
+      }
+    } catch (error) {
+      console.error("Error fetching upload stats:", error);
+    }
+  }, [session?.user?.email]);
 
   // Fetch user's favorites
   const fetchFavorites = useCallback(async () => {
@@ -98,7 +125,7 @@ export default function Home() {
       // Filter posts based on configured max age
       const cutoffDate = new Date();
       cutoffDate.setHours(cutoffDate.getHours() - recentActivity.maxAgeHours);
-      const recentPosts = data.filter(post => new Date(post.createdAt) > cutoffDate);
+      const recentPosts = data.posts.filter(post => new Date(post.createdAt) > cutoffDate);
       
       // If logged in, fetch favorites to filter users
       let favUsernames = [];
@@ -134,8 +161,9 @@ export default function Home() {
   useEffect(() => {
     if (session) {
       fetchRecentUsers();
+      fetchUploadStats();
     }
-  }, [session, fetchRecentUsers]);
+  }, [session, fetchRecentUsers, fetchUploadStats]);
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
@@ -155,16 +183,24 @@ export default function Home() {
     if (!image) return alert("Please select an image");
 
     setIsUploading(true);
+    setUploadError(null);
     
     try {
       const formData = new FormData();
       formData.append("caption", caption);
       formData.append("image", image);
 
-      await fetch("/api/posts", {
+      const res = await fetch("/api/posts", {
         method: "POST",
         body: formData,
       });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setUploadError(data);
+        return;
+      }
 
       setCaption("");
       setImage(null);
@@ -172,10 +208,18 @@ export default function Home() {
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
       }
+      
+      // Update upload stats
+      setUploadStats({
+        dailyLimit: data.dailyLimit,
+        todayUploads: data.todayUploads,
+        remainingUploads: data.remainingUploads
+      });
+      
       fetchRecentUsers(); // Refresh the list after posting
     } catch (error) {
       console.error("Error uploading post:", error);
-      alert("Failed to upload post. Please try again.");
+      setUploadError({ message: "Failed to upload post. Please try again." });
     } finally {
       setIsUploading(false);
     }
@@ -248,7 +292,33 @@ export default function Home() {
       
       <main className="max-w-4xl mx-auto pt-6 pb-16 px-4">
         <div className="bg-white border border-gray-200 rounded-lg p-4 mb-6 shadow-sm">
-          <h2 className="text-lg font-semibold mb-4">Create Post</h2>
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-lg font-semibold">Create Post</h2>
+            {uploadStats && (
+              <div className="text-sm text-gray-500">
+                {uploadStats.remainingUploads > 0 ? (
+                  <span>{uploadStats.remainingUploads} of {uploadStats.dailyLimit} uploads remaining today</span>
+                ) : (
+                  <span className="text-red-500 font-medium">Daily upload limit reached</span>
+                )}
+              </div>
+            )}
+          </div>
+          
+          {uploadError && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4">
+              <p className="font-medium">{uploadError.message}</p>
+              {uploadError.dailyLimit && (
+                <p className="mt-2">
+                  You've uploaded {uploadError.todayUploads} posts today (limit: {uploadError.dailyLimit}).
+                  <Link href="/my-posts" className="ml-2 text-blue-600 underline">
+                    Go to My Posts
+                  </Link> to delete some posts before uploading more.
+                </p>
+              )}
+            </div>
+          )}
+          
           <form onSubmit={handleSubmit}>
             <div className="mb-4">
               <textarea
@@ -309,9 +379,9 @@ export default function Home() {
             
             <button 
               type="submit" 
-              disabled={isUploading || !image}
+              disabled={isUploading || !image || (uploadStats && uploadStats.remainingUploads <= 0)}
               className={`w-full py-2 px-4 rounded-md font-medium ${
-                isUploading || !image
+                isUploading || !image || (uploadStats && uploadStats.remainingUploads <= 0)
                   ? "bg-blue-300 cursor-not-allowed"
                   : "bg-blue-500 hover:bg-blue-600"
               } text-white transition duration-200`}

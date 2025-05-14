@@ -3,7 +3,7 @@ import cloudinary from "@/lib/cloudinary";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { ObjectId } from "mongodb";
-import { postVisibility } from "@/lib/config";
+import { postVisibility, uploadLimits } from "@/lib/config";
 import { NextResponse } from "next/server";
 
 // Cache control headers for better performance
@@ -16,6 +16,41 @@ export async function POST(req) {
 
   if (!session) {
     return new Response("Unauthorized", { status: 401 });
+  }
+
+  const client = await clientPromise;
+  const db = client.db("instaclone");
+
+  // Check daily upload limit
+  const today = new Date();
+  today.setHours(0, 0, 0, 0); // Start of today
+  
+  const tomorrow = new Date(today);
+  tomorrow.setDate(tomorrow.getDate() + 1); // Start of tomorrow
+  
+  // Count posts created by this user today
+  const todayPostsCount = await db.collection("posts").countDocuments({
+    userEmail: session.user.email,
+    createdAt: { 
+      $gte: today,
+      $lt: tomorrow
+    }
+  });
+
+  // If user has reached the daily limit, return an error
+  if (todayPostsCount >= uploadLimits.dailyLimit) {
+    return new Response(
+      JSON.stringify({ 
+        error: "Daily upload limit reached", 
+        message: `You've reached your daily limit of ${uploadLimits.dailyLimit} posts. Please delete an existing post before uploading a new one.`,
+        dailyLimit: uploadLimits.dailyLimit,
+        todayUploads: todayPostsCount
+      }), 
+      { 
+        status: 429, 
+        headers: { "Content-Type": "application/json" } 
+      }
+    );
   }
 
   const data = await req.formData();
@@ -48,9 +83,6 @@ export async function POST(req) {
     readable.pipe(stream);
   });
 
-  const client = await clientPromise;
-  const db = client.db("instaclone");
-
   // Calculate the next public release time
   const now = new Date();
   const releaseDate = new Date(now);
@@ -72,7 +104,15 @@ export async function POST(req) {
     userEmail: session.user.email,
   });
 
-  return new Response("Success", { status: 200 });
+  return new Response(JSON.stringify({
+    success: true,
+    dailyLimit: uploadLimits.dailyLimit,
+    todayUploads: todayPostsCount + 1,
+    remainingUploads: uploadLimits.dailyLimit - (todayPostsCount + 1)
+  }), { 
+    status: 200,
+    headers: { "Content-Type": "application/json" }
+  });
 }
 
 // GET = Fetch all posts
@@ -149,5 +189,42 @@ export async function DELETE(req) {
 
   return new Response(JSON.stringify({ success: result.deletedCount === 1 }), {
     headers: { "Content-Type": "application/json" },
+  });
+}
+
+// GET daily upload stats
+export async function HEAD(req) {
+  const session = await getServerSession(authOptions);
+
+  if (!session) {
+    return new Response("Unauthorized", { status: 401 });
+  }
+
+  const client = await clientPromise;
+  const db = client.db("instaclone");
+
+  // Check daily upload limit
+  const today = new Date();
+  today.setHours(0, 0, 0, 0); // Start of today
+  
+  const tomorrow = new Date(today);
+  tomorrow.setDate(tomorrow.getDate() + 1); // Start of tomorrow
+  
+  // Count posts created by this user today
+  const todayPostsCount = await db.collection("posts").countDocuments({
+    userEmail: session.user.email,
+    createdAt: { 
+      $gte: today,
+      $lt: tomorrow
+    }
+  });
+
+  return new Response(null, { 
+    status: 200,
+    headers: { 
+      "X-Daily-Limit": uploadLimits.dailyLimit.toString(),
+      "X-Today-Uploads": todayPostsCount.toString(),
+      "X-Remaining-Uploads": Math.max(0, uploadLimits.dailyLimit - todayPostsCount).toString()
+    }
   });
 }
