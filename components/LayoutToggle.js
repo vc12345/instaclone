@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from 'react';
 
-export default function LayoutToggle({ layout, setLayout }) {
+export default function LayoutToggle({ layout, setLayout, onLayoutChange = null }) {
   // Use localStorage to remember user's preference
   useEffect(() => {
     const savedLayout = localStorage.getItem('postLayout');
@@ -13,6 +13,11 @@ export default function LayoutToggle({ layout, setLayout }) {
   const handleLayoutChange = (newLayout) => {
     setLayout(newLayout);
     localStorage.setItem('postLayout', newLayout);
+    
+    // Call the optional callback if provided
+    if (onLayoutChange) {
+      onLayoutChange(newLayout);
+    }
   };
 
   return (

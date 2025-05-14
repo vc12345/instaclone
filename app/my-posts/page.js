@@ -53,6 +53,11 @@ export default function MyPostsPage() {
     fetchPosts();
   };
 
+  // Handle layout change - reset to page 1
+  const handleLayoutChange = () => {
+    setCurrentPage(1);
+  };
+
   const totalPages = Math.ceil(posts.length / POSTS_PER_PAGE);
   const start = (currentPage - 1) * POSTS_PER_PAGE;
   const paginatedPosts = posts.slice(start, start + POSTS_PER_PAGE);
@@ -175,7 +180,11 @@ export default function MyPostsPage() {
           <h1 className="text-2xl font-bold">My Posts</h1>
           <div className="flex items-center space-x-4">
             {posts.length > 0 && (
-              <LayoutToggle layout={layout} setLayout={setLayout} />
+              <LayoutToggle 
+                layout={layout} 
+                setLayout={setLayout} 
+                onLayoutChange={handleLayoutChange}
+              />
             )}
           </div>
         </div>
