@@ -144,17 +144,13 @@ export default async function UserProfile({ params, searchParams }) {
                 )}
               </div>
               
-              <div className="flex space-x-6 mb-4">
-                <div className="text-center md:text-left">
-                  <span className="font-semibold">{totalPosts}</span> posts
-                </div>
-                {/* Could add followers/following counts here */}
-              </div>
-              
-              <div>
+              <div className="space-y-1">
                 <h2 className="font-semibold">{user.name || username}</h2>
                 {user.school && (
-                  <p className="text-gray-600">{user.school}</p>
+                  <p className="text-gray-600">School: {user.school}</p>
+                )}
+                {user.yearOfReception && (
+                  <p className="text-gray-600">Year of Reception: {user.yearOfReception}</p>
                 )}
               </div>
             </div>

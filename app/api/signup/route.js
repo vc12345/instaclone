@@ -16,7 +16,7 @@ function toCamelCase(name) {
 }
 
 export async function POST(req) {
-  const { email, password, name } = await req.json();
+  const { email, password, name, school, yearOfReception } = await req.json();
   const client = await clientPromise;
   const db = client.db("instaclone");
 
@@ -52,10 +52,10 @@ export async function POST(req) {
     password: hashed,
     name,
     school,
+    yearOfReception,
     username, // Add the generated username
     createdAt: new Date(),
   });
 
   return new Response("User created", { status: 201 });
 }
-
