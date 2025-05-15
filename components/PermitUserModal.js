@@ -8,14 +8,15 @@ export default function PermitUserModal({ isOpen, onClose }) {
   const [email, setEmail] = useState("");
   const [school, setSchool] = useState("");
   const [customSchool, setCustomSchool] = useState("");
+  const [schoolPostcode, setSchoolPostcode] = useState("");
   const [yearOfReception, setYearOfReception] = useState("");
   const [schools, setSchools] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState(null);
   const [error, setError] = useState(null);
 
-  // Generate academic year options (YYYY/YY format)
-  const academicYears = generateAcademicYears(1980);
+  // Generate academic year options (YYYY/YY format) - limited to 10
+  const academicYears = generateAcademicYears(1980, null, 10);
 
   // Fetch distinct schools
   useEffect(() => {
@@ -40,7 +41,10 @@ export default function PermitUserModal({ isOpen, onClose }) {
     setIsLoading(true);
 
     try {
-      const finalSchool = school === "other" ? customSchool : school;
+      // Format school name with postcode if custom school
+      const finalSchool = school === "other" 
+        ? `${customSchool} (${schoolPostcode})` 
+        : school;
       
       const res = await fetch("/api/permit-user", {
         method: "POST",
@@ -60,6 +64,7 @@ export default function PermitUserModal({ isOpen, onClose }) {
         setEmail("");
         setSchool("");
         setCustomSchool("");
+        setSchoolPostcode("");
         setYearOfReception("");
       } else {
         const data = await res.json();
@@ -140,20 +145,37 @@ export default function PermitUserModal({ isOpen, onClose }) {
             </div>
 
             {school === "other" && (
-              <div>
-                <label htmlFor="customSchool" className="block text-sm font-medium text-gray-700 mb-1">
-                  Enter School Name
-                </label>
-                <input
-                  id="customSchool"
-                  type="text"
-                  value={customSchool}
-                  onChange={(e) => setCustomSchool(e.target.value)}
-                  required
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                  placeholder="Enter school name"
-                />
-              </div>
+              <>
+                <div>
+                  <label htmlFor="customSchool" className="block text-sm font-medium text-gray-700 mb-1">
+                    School Name
+                  </label>
+                  <input
+                    id="customSchool"
+                    type="text"
+                    value={customSchool}
+                    onChange={(e) => setCustomSchool(e.target.value)}
+                    required
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    placeholder="eg. St Christopher's"
+                  />
+                </div>
+                
+                <div>
+                  <label htmlFor="schoolPostcode" className="block text-sm font-medium text-gray-700 mb-1">
+                    School Postcode
+                  </label>
+                  <input
+                    id="schoolPostcode"
+                    type="text"
+                    value={schoolPostcode}
+                    onChange={(e) => setSchoolPostcode(e.target.value)}
+                    required
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    placeholder="eg. NW3"
+                  />
+                </div>
+              </>
             )}
 
             <div>
