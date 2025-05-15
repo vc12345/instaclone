@@ -74,6 +74,12 @@ export default function MyPostsPage() {
     return new Date(post.publicReleaseTime) > new Date();
   }, []);
 
+  // Format release date in GMT
+  const formatReleaseDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toUTCString();
+  };
+
   const handleImageClick = (index) => {
     setSelectedImageIndex(index);
   };
@@ -91,26 +97,45 @@ export default function MyPostsPage() {
             alt={post.caption || "My post"} 
             fill
             sizes="(max-width: 768px) 33vw, 300px"
-            className={`object-cover ${isScheduledPost(post) ? 'opacity-60' : ''}`}
+            className="object-cover"
           />
-          {isScheduledPost(post) && (
-            <div className="absolute top-2 right-2 bg-yellow-500 text-white text-xs px-2 py-1 rounded-full">
-              Scheduled
-            </div>
-          )}
+          <div className="absolute top-2 left-2">
+            {isScheduledPost(post) ? (
+              <div className="bg-yellow-500 text-white text-xs px-2 py-1 rounded-full inline-flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-3 h-3 mr-1">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Scheduled
+              </div>
+            ) : (
+              <div className="bg-green-500 text-white text-xs px-2 py-1 rounded-full inline-flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-3 h-3 mr-1">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Released
+              </div>
+            )}
+          </div>
           <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all duration-200 flex flex-col justify-between p-3 opacity-0 group-hover:opacity-100">
             <div className="text-white text-xs truncate">{post.caption}</div>
-            <div className="flex justify-between items-end w-full">
-              <span className="text-white text-xs">{formatDate(post.createdAt)}</span>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleDelete(post._id);
-                }}
-                className="text-red-400 hover:text-red-300 text-sm"
-              >
-                Delete
-              </button>
+            <div className="flex flex-col items-start w-full">
+              <span className="text-white text-xs mb-1">
+                {isScheduledPost(post) 
+                  ? `Scheduled: ${formatReleaseDate(post.publicReleaseTime)}` 
+                  : `Released: ${formatReleaseDate(post.publicReleaseTime)}`}
+              </span>
+              <div className="flex justify-between w-full">
+                <span className="text-white text-xs">Created: {formatDate(post.createdAt)}</span>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDelete(post._id);
+                  }}
+                  className="text-red-400 hover:text-red-300 text-sm"
+                >
+                  Delete
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -131,17 +156,29 @@ export default function MyPostsPage() {
               alt={post.caption || "My post"} 
               fill
               sizes="(max-width: 768px) 100vw, 800px"
-              className={`object-cover ${isScheduledPost(post) ? 'opacity-60' : ''}`}
+              className="object-cover"
             />
-            {isScheduledPost(post) && (
-              <div className="absolute top-4 right-4 bg-yellow-500 text-white px-3 py-1 rounded-full font-medium">
-                Scheduled for {new Date(post.publicReleaseTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
-              </div>
-            )}
+            <div className="absolute top-4 right-4">
+              {isScheduledPost(post) ? (
+                <div className="bg-yellow-500 text-white px-3 py-1 rounded-full font-medium inline-flex items-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4 mr-1">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  Scheduled: {formatReleaseDate(post.publicReleaseTime)}
+                </div>
+              ) : (
+                <div className="bg-green-500 text-white px-3 py-1 rounded-full font-medium inline-flex items-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4 mr-1">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  Released: {formatReleaseDate(post.publicReleaseTime)}
+                </div>
+              )}
+            </div>
           </div>
           <div className="p-4">
             <div className="flex justify-between items-center mb-3">
-              <span className="text-sm text-gray-500">{formatDate(post.createdAt)}</span>
+              <span className="text-sm text-gray-500">Created: {formatDate(post.createdAt)}</span>
               <button
                 onClick={() => handleDelete(post._id)}
                 className="text-red-500 text-sm font-medium hover:text-red-600 transition-colors"
