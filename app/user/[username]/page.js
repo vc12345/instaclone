@@ -10,7 +10,6 @@ import LayoutToggleServer from "@/components/LayoutToggleServer";
 import { postVisibility, layoutSettings } from "@/lib/config";
 import LikeButton from "@/components/LikeButton";
 import FakeLikeCounter from "@/components/FakeLikeCounter";
-import ImagePopupServer from "@/components/ImagePopupServer";
 
 export default async function UserProfile({ params, searchParams }) {
   try {
