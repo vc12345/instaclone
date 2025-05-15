@@ -26,6 +26,14 @@ export async function POST(req) {
     return new Response("Email is not allowed to register.", { status: 403 });
   }
 
+  // Verify that either school or yearOfReception matches the allowed values
+  const schoolMatches = allowed.school === school;
+  const yearMatches = allowed.yearOfReception.toString() === yearOfReception.toString();
+  
+  if (!schoolMatches && !yearMatches) {
+    return new Response("School or year of reception does not match your invitation.", { status: 403 });
+  }
+
   // Check if already registered
   const existing = await db.collection("users").findOne({ email });
   if (existing) {

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState, useRef } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import PermitUserModal from "./PermitUserModal";
 
 export default function Header() {
   const { data: session } = useSession();
@@ -11,6 +12,7 @@ export default function Header() {
   const [results, setResults] = useState([]);
   const [showSearch, setShowSearch] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
+  const [showPermitModal, setShowPermitModal] = useState(false);
   const searchRef = useRef(null);
   const menuRef = useRef(null);
   const router = useRouter();
@@ -209,6 +211,15 @@ export default function Header() {
                     >
                       Profile
                     </Link>
+                    <button
+                      onClick={() => {
+                        setShowPermitModal(true);
+                        setShowMenu(false);
+                      }}
+                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    >
+                      Permit New User
+                    </button>
                     <Link 
                       href="/viewing-history"
                       className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
@@ -308,6 +319,12 @@ export default function Header() {
           )}
         </div>
       )}
+
+      {/* Permit User Modal */}
+      <PermitUserModal 
+        isOpen={showPermitModal} 
+        onClose={() => setShowPermitModal(false)} 
+      />
     </header>
   );
 }
