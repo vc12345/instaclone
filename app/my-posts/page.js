@@ -6,15 +6,18 @@ import Image from "next/image";
 import LayoutToggle from "@/components/LayoutToggle";
 import PostCard from "@/components/PostCard";
 import OptimizedImage from "@/components/OptimizedImage";
+import ImagePopup from "@/components/ImagePopup";
 import { formatDate } from "@/lib/utils";
+import { layoutSettings } from "@/lib/config";
 
 export default function MyPostsPage() {
   const { data: session, status } = useSession();
   const [posts, setPosts] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const [layout, setLayout] = useState('single');
+  const [layout, setLayout] = useState(layoutSettings.defaultLayout);
   const [isLoading, setIsLoading] = useState(true);
   const [totalPages, setTotalPages] = useState(1);
+  const [selectedImageIndex, setSelectedImageIndex] = useState(null);
   
   const POSTS_PER_PAGE = useMemo(() => layout === 'grid' ? 9 : 3, [layout]);
 
@@ -70,10 +73,18 @@ export default function MyPostsPage() {
     return new Date(post.publicReleaseTime) > new Date();
   }, []);
 
+  const handleImageClick = (index) => {
+    setSelectedImageIndex(index);
+  };
+
   const renderGridLayout = () => (
     <div className="grid grid-cols-3 gap-1 md:gap-4">
-      {posts.map((post) => (
-        <div key={post._id} className="aspect-square relative overflow-hidden bg-gray-100 group">
+      {paginatedPosts.map((post, index) => (
+        <div 
+          key={post._id} 
+          className="aspect-square relative overflow-hidden bg-gray-100 group cursor-pointer"
+          onClick={() => handleImageClick(index)}
+        >
           <OptimizedImage 
             src={post.imageUrl} 
             alt={post.caption || "My post"} 
@@ -91,7 +102,10 @@ export default function MyPostsPage() {
             <div className="flex justify-between items-end w-full">
               <span className="text-white text-xs">{formatDate(post.createdAt)}</span>
               <button
-                onClick={() => handleDelete(post._id)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleDelete(post._id);
+                }}
                 className="text-red-400 hover:text-red-300 text-sm"
               >
                 Delete
@@ -105,13 +119,41 @@ export default function MyPostsPage() {
 
   const renderSingleLayout = () => (
     <div className="space-y-6">
-      {posts.map((post) => (
-        <PostCard 
-          key={post._id} 
-          post={post} 
-          isOwnProfile={true}
-          onDelete={handleDelete}
-        />
+      {paginatedPosts.map((post, index) => (
+        <div key={post._id} className="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm">
+          <div 
+            className="relative w-full h-[400px] cursor-pointer"
+            onClick={() => handleImageClick(index)}
+          >
+            <OptimizedImage 
+              src={post.imageUrl} 
+              alt={post.caption || "My post"} 
+              fill
+              sizes="(max-width: 768px) 100vw, 800px"
+              className={`object-cover ${isScheduledPost(post) ? 'opacity-60' : ''}`}
+            />
+            {isScheduledPost(post) && (
+              <div className="absolute top-4 right-4 bg-yellow-500 text-white px-3 py-1 rounded-full font-medium">
+                Scheduled for {new Date(post.publicReleaseTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+              </div>
+            )}
+          </div>
+          <div className="p-4">
+            <div className="flex justify-between items-center mb-3">
+              <span className="text-sm text-gray-500">{formatDate(post.createdAt)}</span>
+              <button
+                onClick={() => handleDelete(post._id)}
+                className="text-red-500 text-sm font-medium hover:text-red-600 transition-colors"
+              >
+                Delete Post
+              </button>
+            </div>
+            <div className="mb-2">
+              <FakeLikeCounter postId={post._id} />
+            </div>
+            <p>{post.caption}</p>
+          </div>
+        </div>
       ))}
     </div>
   );
@@ -138,6 +180,9 @@ export default function MyPostsPage() {
     );
   }
 
+  // Apply pagination
+  const paginatedPosts = posts;
+
   return (
     <div className="bg-gray-50 min-h-screen">
       <Header />
@@ -158,7 +203,7 @@ export default function MyPostsPage() {
         {posts.length === 0 ? (
           <div className="bg-white border border-gray-200 rounded-lg p-8 text-center">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-12 h-12 mx-auto text-gray-400 mb-3">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z" />
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175a2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z" />
               <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zM18.75 10.5h.008v.008h-.008V10.5z" />
             </svg>
             <h3 className="text-xl font-light mb-1">No Posts Yet</h3>
@@ -200,6 +245,14 @@ export default function MyPostsPage() {
           </div>
         )}
       </div>
+
+      {selectedImageIndex !== null && (
+        <ImagePopup 
+          posts={paginatedPosts} 
+          initialIndex={selectedImageIndex} 
+          onClose={() => setSelectedImageIndex(null)} 
+        />
+      )}
     </div>
   );
 }

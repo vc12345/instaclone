@@ -1,6 +1,7 @@
 "use client";
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
+import { layoutSettings } from '@/lib/config';
 
 export default function LayoutToggleServer({ currentLayout, username }) {
   const searchParams = useSearchParams();

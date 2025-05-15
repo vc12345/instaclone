@@ -7,15 +7,17 @@ import { authOptions } from "@/lib/auth";
 import FavoriteButton from "@/components/FavoriteButton";
 import Image from "next/image";
 import LayoutToggleServer from "@/components/LayoutToggleServer";
-import { postVisibility } from "@/lib/config";
+import { postVisibility, layoutSettings } from "@/lib/config";
 import LikeButton from "@/components/LikeButton";
 import FakeLikeCounter from "@/components/FakeLikeCounter";
+import ImagePopupServer from "@/components/ImagePopupServer";
 
 export default async function UserProfile({ params, searchParams }) {
   try {
     const { username } = params;
     const currentPage = parseInt(searchParams.page) || 1;
-    const layout = searchParams.layout || 'grid'; // Default to grid layout
+    const layout = searchParams.layout || layoutSettings.defaultLayout;
+    const selectedImageId = searchParams.image || null;
     const POSTS_PER_PAGE = layout === 'grid' ? 9 : 3;
 
     const client = await clientPromise;
@@ -95,6 +97,12 @@ export default async function UserProfile({ params, searchParams }) {
     // Apply pagination
     const start = (currentPage - 1) * POSTS_PER_PAGE;
     const paginatedPosts = posts.slice(start, start + POSTS_PER_PAGE);
+
+    // Find selected image index if an image ID is provided
+    let selectedImageIndex = -1;
+    if (selectedImageId) {
+      selectedImageIndex = paginatedPosts.findIndex(post => post._id.toString() === selectedImageId);
+    }
 
     const formatDate = (dateString) => {
       const date = new Date(dateString);
@@ -202,7 +210,11 @@ export default async function UserProfile({ params, searchParams }) {
             ) : layout === 'grid' ? (
               <div className="grid grid-cols-3 gap-1 md:gap-4">
                 {paginatedPosts.map((post) => (
-                  <div key={post._id.toString()} className="aspect-square relative overflow-hidden bg-gray-100">
+                  <Link
+                    key={post._id.toString()}
+                    href={`/user/${username}?layout=${layout}&page=${currentPage}&image=${post._id.toString()}`}
+                    className="aspect-square relative overflow-hidden bg-gray-100 cursor-pointer"
+                  >
                     <Image 
                       src={post.imageUrl} 
                       alt={post.caption || "Post image"}
@@ -215,7 +227,7 @@ export default async function UserProfile({ params, searchParams }) {
                         Scheduled
                       </div>
                     )}
-                  </div>
+                  </Link>
                 ))}
               </div>
             ) : (
@@ -232,7 +244,10 @@ export default async function UserProfile({ params, searchParams }) {
                       <span className="ml-auto text-xs text-gray-500">{formatDate(post.createdAt)}</span>
                     </div>
                     
-                    <div className="relative w-full h-[500px]">
+                    <Link
+                      href={`/user/${username}?layout=${layout}&page=${currentPage}&image=${post._id.toString()}`}
+                      className="block relative w-full h-[500px] cursor-pointer"
+                    >
                       <Image 
                         src={post.imageUrl} 
                         alt={post.caption || "Post image"} 
@@ -245,7 +260,7 @@ export default async function UserProfile({ params, searchParams }) {
                           Scheduled for {new Date(post.publicReleaseTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
                         </div>
                       )}
-                    </div>
+                    </Link>
                     
                     <div className="p-3">
                       <div className="flex items-center mb-2">
@@ -294,6 +309,58 @@ export default async function UserProfile({ params, searchParams }) {
             </div>
           )}
         </div>
+
+        {/* Image Popup */}
+        {selectedImageIndex >= 0 && (
+          <div className="fixed inset-0 bg-black bg-opacity-90 z-50 flex items-center justify-center">
+            <div className="relative w-full max-w-4xl h-[80vh]">
+              <Link
+                href={`/user/${username}?layout=${layout}&page=${currentPage}`}
+                className="absolute top-4 right-4 bg-white bg-opacity-50 rounded-full p-2 hover:bg-opacity-70"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </Link>
+              
+              {selectedImageIndex > 0 && (
+                <Link
+                  href={`/user/${username}?layout=${layout}&page=${currentPage}&image=${paginatedPosts[selectedImageIndex - 1]._id.toString()}`}
+                  className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-50 rounded-full p-2 z-10 hover:bg-opacity-70"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+                  </svg>
+                </Link>
+              )}
+              
+              <div className="relative h-full w-full">
+                <Image 
+                  src={paginatedPosts[selectedImageIndex].imageUrl} 
+                  alt={paginatedPosts[selectedImageIndex].caption || "Post image"} 
+                  fill
+                  className="object-contain"
+                />
+              </div>
+              
+              {selectedImageIndex < paginatedPosts.length - 1 && (
+                <Link
+                  href={`/user/${username}?layout=${layout}&page=${currentPage}&image=${paginatedPosts[selectedImageIndex + 1]._id.toString()}`}
+                  className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-50 rounded-full p-2 z-10 hover:bg-opacity-70"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                  </svg>
+                </Link>
+              )}
+              
+              <div className="absolute bottom-4 left-0 right-0 bg-black bg-opacity-50 text-white p-4">
+                <p className="font-medium">{username}</p>
+                <p className="text-sm">{paginatedPosts[selectedImageIndex].caption}</p>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     );
   } catch (error) {
