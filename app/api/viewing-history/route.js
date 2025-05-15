@@ -35,7 +35,7 @@ export async function GET(req) {
       .toArray();
   } else {
     // Users who viewed the current user's profile
-    history = await db
+    const viewerRecords = await db
       .collection("viewingHistory")
       .find({ 
         viewedUsername: session.user.username,
@@ -44,6 +44,20 @@ export async function GET(req) {
       .sort({ viewedAt: -1 })
       .limit(viewingHistory.maxEntries)
       .toArray();
+    
+    // Fetch viewer school information
+    for (const record of viewerRecords) {
+      const viewer = await db.collection("users").findOne(
+        { username: record.viewerUsername },
+        { projection: { school: 1 } }
+      );
+      
+      if (viewer) {
+        record.viewerSchool = viewer.school || "";
+      }
+    }
+    
+    history = viewerRecords;
   }
 
   return new Response(JSON.stringify(history), {

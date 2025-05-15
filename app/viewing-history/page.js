@@ -12,6 +12,16 @@ export default function ViewingHistoryPage() {
   const [activeTab, setActiveTab] = useState("outgoing");
   const [history, setHistory] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [currentTime, setCurrentTime] = useState(new Date());
+
+  // Update current time every minute
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 60000);
+    
+    return () => clearInterval(timer);
+  }, []);
 
   useEffect(() => {
     // Redirect if not logged in
@@ -43,21 +53,8 @@ export default function ViewingHistoryPage() {
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
-    const now = new Date();
-    const diffDays = Math.floor((now - date) / (1000 * 60 * 60 * 24));
-    
-    if (diffDays === 0) {
-      return "Today, " + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    } else if (diffDays === 1) {
-      return "Yesterday, " + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    } else {
-      return date.toLocaleDateString([], { 
-        month: 'short', 
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-      });
-    }
+    // Format in GMT/UTC
+    return date.toUTCString();
   };
 
   if (status === "loading" || isLoading) {
@@ -78,7 +75,7 @@ export default function ViewingHistoryPage() {
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-2xl font-bold">Viewing History</h1>
           <div className="text-sm text-gray-500">
-            Last {viewingHistory.maxAgeDays} days
+            {currentTime.toUTCString()}
           </div>
         </div>
 
@@ -138,9 +135,23 @@ export default function ViewingHistoryPage() {
                     <div className="flex-grow">
                       <h3 className="font-medium">
                         {activeTab === "outgoing" ? item.viewedUsername : item.viewerUsername}
+                        {activeTab === "incoming" && item.viewerSchool && (
+                          <span className="font-normal text-sm text-gray-500 ml-2">
+                            ({item.viewerSchool})
+                          </span>
+                        )}
                       </h3>
                       <p className="text-sm text-gray-500">
-                        {activeTab === "outgoing" ? "Viewed by you" : "Viewed your profile"}
+                        {activeTab === "outgoing" ? (
+                          "Viewed by you"
+                        ) : (
+                          <>
+                            <Link href={`/user/${item.viewerUsername}`} className="text-blue-600 hover:underline">
+                              {item.viewerUsername}
+                            </Link>
+                            {" viewed your profile"}
+                          </>
+                        )}
                       </p>
                     </div>
                     <div className="text-sm text-gray-500">
