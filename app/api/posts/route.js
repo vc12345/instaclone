@@ -87,10 +87,11 @@ export async function POST(req) {
   const now = new Date();
   const releaseDate = new Date(now);
   
-  // Set the release time to the configured hour and minute
+  // Set the release time to the configured hour and minute (6:00 PM local time)
   releaseDate.setHours(postVisibility.releaseHour, postVisibility.releaseMinute, 0, 0);
   
   // If current time is past today's release time, set release for tomorrow
+  // This ensures posts uploaded after 6:00 PM are scheduled for the next day
   if (now > releaseDate) {
     releaseDate.setDate(releaseDate.getDate() + 1);
   }

@@ -174,7 +174,7 @@ export default async function UserProfile({ params, searchParams }) {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
                 <p className="text-blue-800">
-                  <span className="font-medium">Post Release Schedule:</span> New posts become publicly visible at {formattedReleaseTime} daily.
+                  <span className="font-medium">Post Release Schedule:</span> New posts become publicly visible at {formattedReleaseTime} (6:00 PM) daily.
                 </p>
               </div>
             </div>

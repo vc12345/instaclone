@@ -122,10 +122,22 @@ export default function Home() {
       const res = await fetch("/api/posts");
       const data = await res.json();
       
-      // Filter posts based on configured max age
-      const cutoffDate = new Date();
-      cutoffDate.setHours(cutoffDate.getHours() - recentActivity.maxAgeHours);
-      const recentPosts = data.posts.filter(post => new Date(post.createdAt) > cutoffDate);
+      // Calculate cutoff date based on the last N release times
+      const now = new Date();
+      const today = new Date(now);
+      today.setHours(postVisibility.releaseHour, postVisibility.releaseMinute, 0, 0);
+      
+      // If current time is before today's release, we need to go back one more day
+      const daysToGoBack = now < today ? recentActivity.pastReleasesDisplayed : recentActivity.pastReleasesDisplayed - 1;
+      
+      const cutoffDate = new Date(today);
+      cutoffDate.setDate(cutoffDate.getDate() - daysToGoBack);
+      
+      // Filter posts that were released after the cutoff date
+      const recentPosts = data.posts.filter(post => {
+        const releaseTime = new Date(post.publicReleaseTime);
+        return releaseTime >= cutoffDate;
+      });
       
       // If logged in, fetch favorites to filter users
       let favUsernames = [];
@@ -256,9 +268,9 @@ export default function Home() {
     return 'just now';
   };
 
-  // Format the feed label by replacing {hours} with the actual value
+  // Format the feed label by replacing {pastReleasesDisplayed} with the actual value
   const getFeedLabel = () => {
-    return recentActivity.feedLabel.replace('{hours}', recentActivity.maxAgeHours);
+    return recentActivity.feedLabel.replace('{pastReleasesDisplayed}', recentActivity.pastReleasesDisplayed);
   };
 
   // If user is not logged in, show login/signup forms
