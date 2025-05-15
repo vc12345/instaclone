@@ -92,7 +92,7 @@ export default function Header() {
                   setShowSearch(true);
                 }}
                 onFocus={() => setShowSearch(true)}
-                placeholder="Search"
+                placeholder="User search"
                 className="bg-gray-100 rounded-lg py-1 px-3 text-sm w-64 focus:outline-none"
               />
               {searchTerm && (
