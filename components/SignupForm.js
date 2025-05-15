@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import Link from "next/link";
@@ -15,10 +15,25 @@ export default function SignupForm() {
   const [yearOfReception, setYearOfReception] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [schools, setSchools] = useState([]);
   const router = useRouter();
 
   // Generate academic year options (YYYY/YY format) - limited to 10
   const academicYears = generateAcademicYears(1980, null, 10);
+
+  // Fetch distinct schools
+  useEffect(() => {
+    const fetchSchools = async () => {
+      try {
+        const res = await fetch("/api/schools");
+        const data = await res.json();
+        setSchools(data);
+      } catch (error) {
+        console.error("Error fetching schools:", error);
+      }
+    };
+    fetchSchools();
+  }, []);
 
   const handleSignup = async (e) => {
     e.preventDefault();
@@ -138,6 +153,11 @@ export default function SignupForm() {
             className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
           >
             <option value="">Select school</option>
+            {schools.map((school) => (
+              <option key={school} value={school}>
+                {school}
+              </option>
+            ))}
             <option value="other">School not in list</option>
           </select>
         </div>
