@@ -11,9 +11,19 @@ export default function Header() {
   const [results, setResults] = useState([]);
   const [showSearch, setShowSearch] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
+  const [currentTime, setCurrentTime] = useState(new Date());
   const searchRef = useRef(null);
   const menuRef = useRef(null);
   const router = useRouter();
+
+  // Update current time every minute
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 60000);
+    
+    return () => clearInterval(timer);
+  }, []);
 
   useEffect(() => {
     const delayDebounce = setTimeout(async () => {
@@ -76,6 +86,11 @@ export default function Header() {
           <Link href="/" className="text-xl font-bold italic">
             Instaclone
           </Link>
+        </div>
+
+        {/* GMT Time */}
+        <div className="hidden md:block text-xs text-gray-500">
+          {currentTime.toUTCString()}
         </div>
 
         {/* Search - Only shown to logged in users */}
@@ -316,7 +331,10 @@ export default function Header() {
         </div>
       )}
 
-
+      {/* Mobile GMT Time */}
+      <div className="md:hidden text-center text-xs text-gray-500 pb-1">
+        {currentTime.toUTCString()}
+      </div>
     </header>
   );
 }

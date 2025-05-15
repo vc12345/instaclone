@@ -12,16 +12,6 @@ export default function ViewingHistoryPage() {
   const [activeTab, setActiveTab] = useState("outgoing");
   const [history, setHistory] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [currentTime, setCurrentTime] = useState(new Date());
-
-  // Update current time every minute
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentTime(new Date());
-    }, 60000);
-    
-    return () => clearInterval(timer);
-  }, []);
 
   useEffect(() => {
     // Redirect if not logged in
@@ -75,7 +65,7 @@ export default function ViewingHistoryPage() {
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-2xl font-bold">Viewing History</h1>
           <div className="text-sm text-gray-500">
-            {currentTime.toUTCString()}
+            Last {viewingHistory.maxAgeDays} days
           </div>
         </div>
 
