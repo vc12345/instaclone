@@ -3,13 +3,13 @@ import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import Image from "next/image";
 import Header from "@/components/Header";
 import { viewingHistory } from "@/lib/config";
 
 export default function ViewingHistoryPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const [activeTab, setActiveTab] = useState("outgoing");
   const [history, setHistory] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -21,14 +21,15 @@ export default function ViewingHistoryPage() {
     }
 
     // Fetch viewing history
-    if (session?.user?.email) {
-      fetchViewingHistory();
+    if (session?.user?.username) {
+      fetchViewingHistory(activeTab);
     }
-  }, [session, status, router]);
+  }, [session, status, router, activeTab]);
 
-  const fetchViewingHistory = async () => {
+  const fetchViewingHistory = async (type) => {
+    setIsLoading(true);
     try {
-      const res = await fetch("/api/viewing-history");
+      const res = await fetch(`/api/viewing-history?type=${type}`);
       if (!res.ok) throw new Error("Failed to fetch viewing history");
       
       const data = await res.json();
@@ -81,6 +82,32 @@ export default function ViewingHistoryPage() {
           </div>
         </div>
 
+        {/* Tabs */}
+        <div className="mb-6 border-b border-gray-200">
+          <div className="flex space-x-8">
+            <button
+              className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                activeTab === "outgoing"
+                  ? "border-blue-500 text-blue-600"
+                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+              }`}
+              onClick={() => setActiveTab("outgoing")}
+            >
+              Profiles You Viewed
+            </button>
+            <button
+              className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                activeTab === "incoming"
+                  ? "border-blue-500 text-blue-600"
+                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+              }`}
+              onClick={() => setActiveTab("incoming")}
+            >
+              Who Viewed Your Profile
+            </button>
+          </div>
+        </div>
+
         {history.length === 0 ? (
           <div className="bg-white border border-gray-200 rounded-lg p-8 text-center">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-12 h-12 mx-auto text-gray-400 mb-3">
@@ -89,7 +116,9 @@ export default function ViewingHistoryPage() {
             </svg>
             <h3 className="text-xl font-light mb-1">No Viewing History</h3>
             <p className="text-gray-500">
-              Profiles you view will appear here.
+              {activeTab === "outgoing" 
+                ? "Profiles you view will appear here." 
+                : "Users who viewed your profile will appear here."}
             </p>
           </div>
         ) : (
@@ -97,29 +126,22 @@ export default function ViewingHistoryPage() {
             <ul className="divide-y divide-gray-200">
               {history.map((item) => (
                 <li key={item._id} className="p-4 hover:bg-gray-50">
-                  <Link href={`/user/${item.viewedUsername}`} className="flex items-center">
+                  <Link 
+                    href={`/user/${activeTab === "outgoing" ? item.viewedUsername : item.viewerUsername}`} 
+                    className="flex items-center"
+                  >
                     <div className="w-12 h-12 rounded-full bg-gray-200 mr-4 flex-shrink-0 overflow-hidden">
-                      {item.viewedUserImage ? (
-                        <div className="relative w-full h-full">
-                          <Image 
-                            src={item.viewedUserImage} 
-                            alt={item.viewedUsername}
-                            fill
-                            sizes="48px"
-                            className="object-cover" 
-                          />
-                        </div>
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center bg-blue-100 text-blue-500 font-bold">
-                          {item.viewedUsername.charAt(0).toUpperCase()}
-                        </div>
-                      )}
+                      <div className="w-full h-full flex items-center justify-center bg-blue-100 text-blue-500 font-bold">
+                        {(activeTab === "outgoing" ? item.viewedUsername : item.viewerUsername)?.charAt(0).toUpperCase()}
+                      </div>
                     </div>
                     <div className="flex-grow">
-                      <h3 className="font-medium">{item.viewedUsername}</h3>
-                      {item.viewedUserName !== item.viewedUsername && (
-                        <p className="text-sm text-gray-500">{item.viewedUserName}</p>
-                      )}
+                      <h3 className="font-medium">
+                        {activeTab === "outgoing" ? item.viewedUsername : item.viewerUsername}
+                      </h3>
+                      <p className="text-sm text-gray-500">
+                        {activeTab === "outgoing" ? "Viewed by you" : "Viewed your profile"}
+                      </p>
                     </div>
                     <div className="text-sm text-gray-500">
                       {formatDate(item.viewedAt)}

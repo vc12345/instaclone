@@ -3,13 +3,16 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { viewingHistory } from "@/lib/config";
 
-// GET - Fetch user's viewing history
+// GET - Fetch viewing history
 export async function GET(req) {
   const session = await getServerSession(authOptions);
   if (!session) {
     return new Response("Unauthorized", { status: 401 });
   }
 
+  const url = new URL(req.url);
+  const type = url.searchParams.get("type") || "outgoing"; // "outgoing" or "incoming"
+  
   const client = await clientPromise;
   const db = client.db("instaclone");
 
@@ -17,16 +20,31 @@ export async function GET(req) {
   const cutoffDate = new Date();
   cutoffDate.setDate(cutoffDate.getDate() - viewingHistory.maxAgeDays);
 
-  // Get viewing history for the current user, sorted by most recent first
-  const history = await db
-    .collection("viewingHistory")
-    .find({ 
-      userEmail: session.user.email,
-      viewedAt: { $gte: cutoffDate }
-    })
-    .sort({ viewedAt: -1 })
-    .limit(viewingHistory.maxEntries)
-    .toArray();
+  let history = [];
+  
+  if (type === "outgoing") {
+    // Profiles viewed by the current user
+    history = await db
+      .collection("viewingHistory")
+      .find({ 
+        viewerUsername: session.user.username,
+        viewedAt: { $gte: cutoffDate }
+      })
+      .sort({ viewedAt: -1 })
+      .limit(viewingHistory.maxEntries)
+      .toArray();
+  } else {
+    // Users who viewed the current user's profile
+    history = await db
+      .collection("viewingHistory")
+      .find({ 
+        viewedUsername: session.user.username,
+        viewedAt: { $gte: cutoffDate }
+      })
+      .sort({ viewedAt: -1 })
+      .limit(viewingHistory.maxEntries)
+      .toArray();
+  }
 
   return new Response(JSON.stringify(history), {
     headers: { "Content-Type": "application/json" },
@@ -58,10 +76,8 @@ export async function POST(req) {
 
   // Record the view
   await db.collection("viewingHistory").insertOne({
-    userEmail: session.user.email,
+    viewerUsername: session.user.username,
     viewedUsername,
-    viewedUserName: viewedUser.name || viewedUsername,
-    viewedUserImage: viewedUser.image || null,
     viewedAt: new Date()
   });
 

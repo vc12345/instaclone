@@ -61,6 +61,7 @@ export default async function UserProfile({ params, searchParams }) {
         isFavorited = !!favorite;
 
         // Record this profile view if not viewing own profile
+        // Only record when the page loads, not during interactions
         await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || ''}/api/viewing-history`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
