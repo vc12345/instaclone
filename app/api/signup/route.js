@@ -23,7 +23,7 @@ export async function POST(req) {
   // Check if email is allowed
   const allowed = await db.collection("allowedEmails").findOne({ email });
   if (!allowed) {
-    return new Response("Email is not allowed to register.", { status: 403 });
+    return new Response("Email is not allowed to register, or school name / reception year does not match referrer's input.", { status: 403 });
   }
 
   // Verify that either school or yearOfReception matches the allowed values

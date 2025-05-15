@@ -2,6 +2,40 @@ import clientPromise from "@/lib/mongodb";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
+// GET - Fetch permitted users
+export async function GET() {
+  const session = await getServerSession(authOptions);
+
+  if (!session) {
+    return new Response(JSON.stringify({ message: "Unauthorized" }), { 
+      status: 401,
+      headers: { "Content-Type": "application/json" }
+    });
+  }
+
+  try {
+    const client = await clientPromise;
+    const db = client.db("instaclone");
+
+    // Get permitted users, sorted by creation date (newest first)
+    const permittedUsers = await db.collection("allowedEmails")
+      .find({ referringUsername: session.user.username })
+      .sort({ createdAt: -1 })
+      .toArray();
+
+    return new Response(JSON.stringify(permittedUsers), {
+      headers: { "Content-Type": "application/json" }
+    });
+  } catch (error) {
+    console.error("Error fetching permitted users:", error);
+    return new Response(JSON.stringify({ message: "Failed to fetch permitted users" }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" }
+    });
+  }
+}
+
+// POST - Add new permitted user
 export async function POST(req) {
   const session = await getServerSession(authOptions);
 
