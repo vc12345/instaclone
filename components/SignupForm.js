@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import Link from "next/link";
+import { generateAcademicYears } from "@/lib/utils";
 
 export default function SignupForm() {
   const [email, setEmail] = useState("");
@@ -14,12 +15,8 @@ export default function SignupForm() {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
-  // Generate year options from 1980 to current year
-  const currentYear = new Date().getFullYear();
-  const yearOptions = [];
-  for (let year = currentYear; year >= 1980; year--) {
-    yearOptions.push(year);
-  }
+  // Generate academic year options (YYYY/YY format)
+  const academicYears = generateAcademicYears(1980);
 
   const handleSignup = async (e) => {
     e.preventDefault();
@@ -142,8 +139,8 @@ export default function SignupForm() {
             required
             className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
           >
-            <option value="">Select year</option>
-            {yearOptions.map((year) => (
+            <option value="">Select academic year</option>
+            {academicYears.map((year) => (
               <option key={year} value={year}>
                 {year}
               </option>
