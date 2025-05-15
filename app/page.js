@@ -125,7 +125,11 @@ export default function Home() {
       // Calculate cutoff date based on the last N release times
       const now = new Date();
       const today = new Date(now);
-      today.setHours(postVisibility.releaseHour, postVisibility.releaseMinute, 0, 0);
+      if (postVisibility.useGMT) {
+        today.setUTCHours(postVisibility.releaseHour, postVisibility.releaseMinute, 0, 0);
+      } else {
+        today.setHours(postVisibility.releaseHour, postVisibility.releaseMinute, 0, 0);
+      }
       
       // If current time is before today's release, we need to go back one more day
       const daysToGoBack = now < today ? recentActivity.pastReleasesDisplayed : recentActivity.pastReleasesDisplayed - 1;

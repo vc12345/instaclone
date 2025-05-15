@@ -120,11 +120,17 @@ export default async function UserProfile({ params, searchParams }) {
 
     // Get the next release time for display
     const nextReleaseTime = new Date();
-    nextReleaseTime.setHours(postVisibility.releaseHour, postVisibility.releaseMinute, 0, 0);
+    if (postVisibility.useGMT) {
+      nextReleaseTime.setUTCHours(postVisibility.releaseHour, postVisibility.releaseMinute, 0, 0);
+    } else {
+      nextReleaseTime.setHours(postVisibility.releaseHour, postVisibility.releaseMinute, 0, 0);
+    }
     if (nextReleaseTime < new Date()) {
       nextReleaseTime.setDate(nextReleaseTime.getDate() + 1);
     }
-    const formattedReleaseTime = nextReleaseTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+    const formattedReleaseTime = postVisibility.useGMT 
+      ? `${nextReleaseTime.toUTCString().split(' ')[4]} GMT` 
+      : nextReleaseTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
 
     return (
       <div className="bg-gray-50 min-h-screen">
@@ -182,7 +188,7 @@ export default async function UserProfile({ params, searchParams }) {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
                 <p className="text-blue-800">
-                  <span className="font-medium">Post Release Schedule:</span> New posts become publicly visible at {formattedReleaseTime} (6:00 PM) daily.
+                  <span className="font-medium">Post Release Schedule:</span> New posts become publicly visible at {formattedReleaseTime} daily.
                 </p>
               </div>
             </div>
