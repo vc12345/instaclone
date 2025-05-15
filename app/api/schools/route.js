@@ -1,24 +1,24 @@
 import clientPromise from "@/lib/mongodb";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 
 export async function GET() {
-  const session = await getServerSession(authOptions);
+  try {
+    const client = await clientPromise;
+    const db = client.db("instaclone");
 
-  if (!session) {
-    return new Response("Unauthorized", { status: 401 });
+    // Get distinct schools from users collection
+    const schools = await db.collection("users").distinct("school");
+    
+    // Sort alphabetically
+    schools.sort();
+
+    return new Response(JSON.stringify(schools), {
+      headers: { "Content-Type": "application/json" },
+    });
+  } catch (error) {
+    console.error("Error fetching schools:", error);
+    return new Response(JSON.stringify([]), {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    });
   }
-
-  const client = await clientPromise;
-  const db = client.db("instaclone");
-
-  // Get distinct schools from users collection
-  const schools = await db.collection("users").distinct("school");
-  
-  // Sort alphabetically
-  schools.sort();
-
-  return new Response(JSON.stringify(schools), {
-    headers: { "Content-Type": "application/json" },
-  });
 }

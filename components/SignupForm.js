@@ -26,8 +26,13 @@ export default function SignupForm() {
     const fetchSchools = async () => {
       try {
         const res = await fetch("/api/schools");
-        const data = await res.json();
-        setSchools(data);
+        if (res.ok) {
+          const data = await res.json();
+          console.log("Schools fetched:", data); // Debug log
+          setSchools(data);
+        } else {
+          console.error("Failed to fetch schools:", res.status);
+        }
       } catch (error) {
         console.error("Error fetching schools:", error);
       }
@@ -153,11 +158,15 @@ export default function SignupForm() {
             className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
           >
             <option value="">Select school</option>
-            {schools.map((school) => (
-              <option key={school} value={school}>
-                {school}
-              </option>
-            ))}
+            {schools && schools.length > 0 ? (
+              schools.map((schoolName) => (
+                <option key={schoolName} value={schoolName}>
+                  {schoolName}
+                </option>
+              ))
+            ) : (
+              <option value="" disabled>Loading schools...</option>
+            )}
             <option value="other">School not in list</option>
           </select>
         </div>
