@@ -7,6 +7,7 @@ import LayoutToggle from "@/components/LayoutToggle";
 import PostCard from "@/components/PostCard";
 import OptimizedImage from "@/components/OptimizedImage";
 import ImagePopup from "@/components/ImagePopup";
+import FakeLikeCounter from "@/components/FakeLikeCounter";
 import { formatDate } from "@/lib/utils";
 import { layoutSettings } from "@/lib/config";
 

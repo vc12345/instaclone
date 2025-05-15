@@ -1,10 +1,19 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import Image from "next/image";
 
 export default function ImagePopup({ posts, initialIndex, onClose }) {
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const currentPost = posts[currentIndex];
+
+  // Memoize handlers to avoid recreating them on each render
+  const handlePrev = useCallback(() => {
+    setCurrentIndex((prev) => (prev + 1) % posts.length);
+  }, [posts.length]);
+
+  const handleNext = useCallback(() => {
+    setCurrentIndex((prev) => (prev - 1 + posts.length) % posts.length);
+  }, [posts.length]);
 
   // Handle keyboard navigation
   useEffect(() => {
@@ -16,15 +25,7 @@ export default function ImagePopup({ posts, initialIndex, onClose }) {
     
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [currentIndex, onClose]);
-
-  const handlePrev = () => {
-    setCurrentIndex((prev) => (prev + 1) % posts.length);
-  };
-
-  const handleNext = () => {
-    setCurrentIndex((prev) => (prev - 1 + posts.length) % posts.length);
-  };
+  }, [onClose, handlePrev, handleNext]);
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-90 z-50 flex items-center justify-center" onClick={onClose}>
