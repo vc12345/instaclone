@@ -42,3 +42,4 @@ export default function ConnectionModal({ username, school, onClose, onConnect }
     </div>
   );
 }
+
