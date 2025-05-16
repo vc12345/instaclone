@@ -63,15 +63,12 @@ export async function POST(req) {
     const stream = cloudinary.uploader.upload_stream(
       {
         transformation: [
-          { width: 1280, crop: "limit" },      // Resize if too wide
-          { effect: "blur:300" },              // More noticeable blur
-          { effect: "saturation:-30" },        // Reduce saturation by 50%
-          { effect: "brightness:-10" },        // More noticeable brightness reduction
-          { effect: "contrast:-10" },          // Reduce contrast
-          { quality: "auto:eco" },             // Smart compression
-          { fetch_format: "auto" }             // Convert to WebP or JPEG
+          { width: 1600, height: 1200, crop: "limit" },  // Resize to max 1600x1200 like WhatsApp
+          { quality: 50 },                               // Lower quality (50 out of 100)
+          { fetch_format: "jpg" },                       // Force JPEG format for consistent compression
+          { strip: "all" }                               // Strip all metadata (EXIF, etc.)
         ],
-        folder: "instaclone"                   // Organize in a folder
+        folder: "instaclone"                             // Organize in a folder
       },
       (error, result) => {
         if (error) reject(error);
