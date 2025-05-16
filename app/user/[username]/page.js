@@ -79,12 +79,19 @@ export default async function UserProfile({ params, searchParams }) {
     try {
       // If viewing own profile, show all posts including scheduled ones
       if (isOwnProfile) {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || ''}/api/posts?username=${username}&viewingOwnProfile=true`, { cache: 'no-store' });
+        // Ensure we have a valid URL by using absolute URL with origin
+        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000');
+        const res = await fetch(`${baseUrl}/api/posts?username=${username}&viewingOwnProfile=true`, { 
+          cache: 'no-store' 
+        });
         const data = await res.json();
         posts = data.posts || []; // Extract posts array from response
       } else {
         // Otherwise, only show publicly released posts
-        const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || ''}/api/posts?username=${username}`, { cache: 'no-store' });
+        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000');
+        const res = await fetch(`${baseUrl}/api/posts?username=${username}`, { 
+          cache: 'no-store' 
+        });
         const data = await res.json();
         posts = data.posts || []; // Extract posts array from response
       }
