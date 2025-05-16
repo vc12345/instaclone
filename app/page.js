@@ -101,6 +101,11 @@ export default function Home() {
 
   // Helper function to process posts into unique users with their stats
   const processPostsToUsers = useCallback((posts) => {
+    if (!Array.isArray(posts) || posts.length === 0) {
+      console.log("No posts to process or posts is not an array");
+      return [];
+    }
+    
     return Array.from(new Set(posts.map(post => post.username)))
       .map(username => {
         const userPosts = posts.filter(post => post.username === username);
@@ -122,10 +127,20 @@ export default function Home() {
       const res = await fetch("/api/posts");
       const data = await res.json();
       
+      // Debug the API response
+      console.log("API response:", {
+        dataType: typeof data,
+        hasPostsProperty: data && 'posts' in data,
+        postsLength: data?.posts?.length || 0
+      });
+      
+      // Ensure we have posts array
+      const posts = data.posts || [];
+      
       // Calculate cutoff date based on the last N release times
       const now = new Date();
       const today = new Date(now);
-      if (postVisibility.useGMT) {
+      if (postVisibility?.useGMT) {
         today.setUTCHours(postVisibility.releaseHour, postVisibility.releaseMinute, 0, 0);
       } else {
         today.setHours(postVisibility.releaseHour, postVisibility.releaseMinute, 0, 0);
@@ -137,10 +152,21 @@ export default function Home() {
       const cutoffDate = new Date(today);
       cutoffDate.setDate(cutoffDate.getDate() - daysToGoBack);
       
+      console.log("Date filtering:", {
+        now: now.toISOString(),
+        cutoffDate: cutoffDate.toISOString(),
+        daysToGoBack
+      });
+      
       // Filter posts that were released after the cutoff date
-      const recentPosts = data.posts.filter(post => {
+      const recentPosts = posts.filter(post => {
         const releaseTime = new Date(post.publicReleaseTime);
         return releaseTime >= cutoffDate;
+      });
+      
+      console.log("Recent posts:", {
+        totalPosts: posts.length,
+        recentPostsCount: recentPosts.length
       });
       
       // If logged in, fetch favorites to filter users
@@ -149,11 +175,21 @@ export default function Home() {
         favUsernames = await fetchFavorites();
         setFavorites(favUsernames);
         
+        console.log("Favorites:", {
+          favCount: favUsernames.length,
+          favorites: favUsernames
+        });
+        
         // Only show users that the current user follows
         if (favUsernames.length > 0) {
           const filteredPosts = recentPosts.filter(post => 
             favUsernames.includes(post.username)
           );
+          
+          console.log("Filtered posts:", {
+            filteredCount: filteredPosts.length,
+            usernames: [...new Set(filteredPosts.map(p => p.username))]
+          });
           
           // Extract unique users from filtered posts
           const uniqueUsers = processPostsToUsers(filteredPosts);
