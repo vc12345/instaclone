@@ -134,10 +134,13 @@ export async function GET(req) {
   const client = await clientPromise;
   const db = client.db("instaclone");
 
-  let query = {
-    // Always show only posts that have reached their public release time
-    publicReleaseTime: { $lte: new Date() }
-  };
+  let query = {};
+  
+  // TEMPORARILY DISABLED: Release time check for public profiles
+  // Only apply release time filter if not viewing a specific user profile
+  if (!username) {
+    query.publicReleaseTime = { $lte: new Date() };
+  }
   
   // If a specific username is provided, filter by that username
   if (username) {
