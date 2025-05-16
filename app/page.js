@@ -123,83 +123,47 @@ export default function Home() {
   const fetchRecentUsers = useCallback(async () => {
     setIsLoading(true);
     try {
-      // Calculate cutoff date based on the last N release times
-      const now = new Date();
-      const today = new Date(now);
-      if (postVisibility?.useGMT) {
-        today.setUTCHours(postVisibility.releaseHour, postVisibility.releaseMinute, 0, 0);
-      } else {
-        today.setHours(postVisibility.releaseHour, postVisibility.releaseMinute, 0, 0);
-      }
-      
-      // If current time is before today's release, we need to go back one more day
-      const daysToGoBack = now < today ? recentActivity.pastReleasesDisplayed : recentActivity.pastReleasesDisplayed - 1;
-      
-      const cutoffDate = new Date(today);
-      cutoffDate.setDate(cutoffDate.getDate() - daysToGoBack);
-      
-      console.log("Date filtering:", {
-        now: now.toISOString(),
-        cutoffDate: cutoffDate.toISOString(),
-        daysToGoBack
-      });
-      
-      // If logged in, fetch favorites to filter users
-      let favUsernames = [];
+      // For testing - force show some users
       if (session?.user?.email) {
-        // Get favorites with their posts in one request
-        const res = await fetch("/api/favorites?includePosts=true");
-        const data = await res.json();
+        // First, get the favorites
+        const favRes = await fetch("/api/favorites");
+        const favorites = await favRes.json();
         
-        if (Array.isArray(data.favorites)) {
-          favUsernames = data.favorites.map(fav => fav.favoritedUsername);
-          setFavorites(favUsernames);
-          
-          console.log("Favorites:", {
-            favCount: favUsernames.length,
-            favorites: favUsernames
-          });
-        }
+        // Extract usernames and update state
+        const favUsernames = favorites.map(fav => fav.favoritedUsername);
+        setFavorites(favUsernames);
         
-        // Process posts if we have them and favorites
-        if (Array.isArray(data.posts) && favUsernames.length > 0) {
-          // Filter posts that were released after the cutoff date
-          const recentPosts = data.posts.filter(post => {
-            const releaseTime = new Date(post.publicReleaseTime);
-            return releaseTime >= cutoffDate;
-          });
+        console.log("Favorites:", favUsernames);
+        
+        if (favUsernames.length > 0) {
+          // For each favorited username, fetch their posts directly
+          const allPosts = [];
           
-          console.log("Recent posts from favorites:", {
-            totalPosts: data.posts.length,
-            recentPostsCount: recentPosts.length
-          });
+          // Use Promise.all to fetch posts for all favorites in parallel
+          await Promise.all(favUsernames.map(async (username) => {
+            try {
+              const postRes = await fetch(`/api/posts?username=${username}`);
+              const postData = await postRes.json();
+              
+              if (postData && Array.isArray(postData.posts)) {
+                allPosts.push(...postData.posts);
+              }
+            } catch (err) {
+              console.error(`Error fetching posts for ${username}:`, err);
+            }
+          }));
           
-          // Extract unique users from filtered posts
-          const uniqueUsers = processPostsToUsers(recentPosts);
+          console.log(`Fetched ${allPosts.length} total posts from favorites`);
+          
+          // Process posts into user summaries
+          const uniqueUsers = processPostsToUsers(allPosts);
           setRecentUsers(uniqueUsers);
         } else {
-          // Either no posts or no favorites
-          console.log("No posts or favorites found");
           setRecentUsers([]);
         }
       } else {
-        // Not logged in, fetch all recent posts
-        const res = await fetch("/api/posts");
-        const data = await res.json();
-        
-        if (data && Array.isArray(data.posts)) {
-          // Filter posts that were released after the cutoff date
-          const recentPosts = data.posts.filter(post => {
-            const releaseTime = new Date(post.publicReleaseTime);
-            return releaseTime >= cutoffDate;
-          });
-          
-          // Extract unique users from filtered posts
-          const uniqueUsers = processPostsToUsers(recentPosts);
-          setRecentUsers(uniqueUsers);
-        } else {
-          setRecentUsers([]);
-        }
+        // Not logged in, show nothing
+        setRecentUsers([]);
       }
     } catch (error) {
       console.error("Error fetching recent users:", error);
