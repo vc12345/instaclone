@@ -80,12 +80,17 @@ export default async function UserProfile({ params, searchParams }) {
       // If viewing own profile, show all posts including scheduled ones
       if (isOwnProfile) {
         const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || ''}/api/posts?username=${username}&viewingOwnProfile=true`, { cache: 'no-store' });
-        posts = await res.json();
+        const data = await res.json();
+        posts = data.posts || []; // Extract posts array from response
       } else {
         // Otherwise, only show publicly released posts
         const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || ''}/api/posts?username=${username}`, { cache: 'no-store' });
-        posts = await res.json();
+        const data = await res.json();
+        posts = data.posts || []; // Extract posts array from response
       }
+      
+      // Log for debugging
+      console.log(`Fetched ${posts.length} posts for ${username}, own profile: ${isOwnProfile}`);
     } catch (fetchError) {
       console.error("Error fetching posts:", fetchError);
     }

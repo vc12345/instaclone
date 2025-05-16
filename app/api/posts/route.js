@@ -131,6 +131,14 @@ export async function GET(req) {
   const limit = parseInt(url.searchParams.get("limit") || "20");
   const skip = (page - 1) * limit;
   
+  // Debug info
+  console.log("API Request:", {
+    url: req.url,
+    username,
+    session: session?.user?.username,
+    time: new Date().toISOString()
+  });
+  
   const client = await clientPromise;
   const db = client.db("instaclone");
 
@@ -159,6 +167,10 @@ export async function GET(req) {
     .limit(limit)
     .toArray();
 
+  // Debug info about the query and results
+  console.log("Query:", JSON.stringify(query));
+  console.log("Found posts:", posts.length);
+  
   // Return with pagination metadata
   return NextResponse.json(
     {
@@ -168,6 +180,11 @@ export async function GET(req) {
         page,
         limit,
         pages: Math.ceil(totalCount / limit)
+      },
+      debug: {
+        query,
+        timestamp: new Date().toISOString(),
+        username: username || "none"
       }
     },
     { headers: cacheHeaders }
