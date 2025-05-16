@@ -21,7 +21,7 @@ export default function ConnectionModal({ username, school, onClose, onConnect }
       <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
         <h3 className="text-xl font-semibold mb-4">Connect with {username}</h3>
         <p className="text-gray-600 mb-6">
-          {username} is from {school || "another school"}. Click "Connect" to reach out.
+          {username} is from {school || "another school"}. Click 'Connect' to reach out.
         </p>
         <div className="flex justify-end space-x-3">
           <button
