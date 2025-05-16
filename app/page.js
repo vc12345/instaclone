@@ -6,7 +6,8 @@ import { useSearchParams } from "next/navigation";
 import Header from "@/components/Header";
 import Image from "next/image";
 import LayoutToggle from "@/components/LayoutToggle";
-import { recentActivity, uploadLimits } from "@/lib/config";
+import { recentActivity, uploadLimits, schoolPrivacy } from "@/lib/config";
+import ConnectionsSection from "@/components/ConnectionsSection";
 import LoginForm from "@/components/LoginForm";
 import SignupForm from "@/components/SignupForm";
 
