@@ -74,32 +74,28 @@ export default async function UserProfile({ params, searchParams }) {
       // Continue without session data
     }
     
-    // Fetch posts with appropriate visibility
+    // Fetch posts directly from the database
     let posts = [];
     try {
-      // If viewing own profile, show all posts including scheduled ones
-      if (isOwnProfile) {
-        // Ensure we have a valid URL by using absolute URL with origin
-        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000');
-        const res = await fetch(`${baseUrl}/api/posts?username=${username}&viewingOwnProfile=true`, { 
-          cache: 'no-store' 
-        });
-        const data = await res.json();
-        posts = data.posts || []; // Extract posts array from response
-      } else {
-        // Otherwise, only show publicly released posts
-        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000');
-        const res = await fetch(`${baseUrl}/api/posts?username=${username}`, { 
-          cache: 'no-store' 
-        });
-        const data = await res.json();
-        posts = data.posts || []; // Extract posts array from response
+      // Build query based on whether viewing own profile
+      let query = { username };
+      
+      // If not viewing own profile, only show publicly released posts
+      if (!isOwnProfile) {
+        query.publicReleaseTime = { $lte: new Date() };
       }
+      
+      // Fetch posts from database directly
+      posts = await db
+        .collection("posts")
+        .find(query)
+        .sort({ createdAt: -1 })
+        .toArray();
       
       // Log for debugging
       console.log(`Fetched ${posts.length} posts for ${username}, own profile: ${isOwnProfile}`);
-    } catch (fetchError) {
-      console.error("Error fetching posts:", fetchError);
+    } catch (dbError) {
+      console.error("Error fetching posts:", dbError);
     }
 
     // Count total posts and calculate pagination
