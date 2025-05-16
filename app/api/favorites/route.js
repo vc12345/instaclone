@@ -11,15 +11,54 @@ export async function GET(req) {
 
   const client = await clientPromise;
   const db = client.db("instaclone");
+  
+  // Check if we need to include posts
+  const url = new URL(req.url);
+  const includePosts = url.searchParams.get("includePosts") === "true";
+  
+  if (includePosts) {
+    // Get list of favorited usernames
+    const favorites = await db
+      .collection("favorites")
+      .find({ userEmail: session.user.email })
+      .toArray();
+    
+    const favoritedUsernames = favorites.map(fav => fav.favoritedUsername);
+    
+    console.log(`Found ${favoritedUsernames.length} favorites for ${session.user.email}`);
+    
+    if (favoritedUsernames.length === 0) {
+      return new Response(JSON.stringify({ favorites: [], posts: [] }), {
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+    
+    // Get posts from favorited users that have been released
+    const posts = await db
+      .collection("posts")
+      .find({
+        username: { $in: favoritedUsernames },
+        publicReleaseTime: { $lte: new Date() }
+      })
+      .sort({ createdAt: -1 })
+      .toArray();
+    
+    console.log(`Found ${posts.length} posts from favorited users`);
+    
+    return new Response(JSON.stringify({ favorites, posts }), {
+      headers: { "Content-Type": "application/json" },
+    });
+  } else {
+    // Just return favorites
+    const favorites = await db
+      .collection("favorites")
+      .find({ userEmail: session.user.email })
+      .toArray();
 
-  const favorites = await db
-    .collection("favorites")
-    .find({ userEmail: session.user.email })
-    .toArray();
-
-  return new Response(JSON.stringify(favorites), {
-    headers: { "Content-Type": "application/json" },
-  });
+    return new Response(JSON.stringify(favorites), {
+      headers: { "Content-Type": "application/json" },
+    });
+  }
 }
 
 // POST - Add a favorite
