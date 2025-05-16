@@ -80,10 +80,8 @@ export default async function UserProfile({ params, searchParams }) {
       // Build query based on whether viewing own profile
       let query = { username };
       
-      // If not viewing own profile, only show publicly released posts
-      if (!isOwnProfile) {
-        query.publicReleaseTime = { $lte: new Date() };
-      }
+      // Always apply release time check, even for own profile
+      query.publicReleaseTime = { $lte: new Date() };
       
       // Fetch posts from database directly
       posts = await db

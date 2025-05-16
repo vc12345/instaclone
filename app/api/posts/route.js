@@ -142,13 +142,10 @@ export async function GET(req) {
   const client = await clientPromise;
   const db = client.db("instaclone");
 
-  let query = {};
-  
-  // TEMPORARILY DISABLED: Release time check for public profiles
-  // Only apply release time filter if not viewing a specific user profile
-  if (!username) {
-    query.publicReleaseTime = { $lte: new Date() };
-  }
+  let query = {
+    // Re-enable release time check for all queries
+    publicReleaseTime: { $lte: new Date() }
+  };
   
   // If a specific username is provided, filter by that username
   if (username) {
