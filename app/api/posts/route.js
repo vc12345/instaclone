@@ -126,7 +126,6 @@ export async function POST(req) {
 export async function GET(req) {
   const session = await getServerSession(authOptions);
   const url = new URL(req.url);
-  const viewingOwnProfile = url.searchParams.get("viewingOwnProfile") === "true";
   const username = url.searchParams.get("username");
   const page = parseInt(url.searchParams.get("page") || "1");
   const limit = parseInt(url.searchParams.get("limit") || "20");
@@ -135,27 +134,14 @@ export async function GET(req) {
   const client = await clientPromise;
   const db = client.db("instaclone");
 
-  let query = {};
-  
-  // If not viewing own profile, only show posts that have reached their public release time
-  if (!viewingOwnProfile) {
-    query = {
-      publicReleaseTime: { $lte: new Date() }
-    };
-  }
+  let query = {
+    // Always show only posts that have reached their public release time
+    publicReleaseTime: { $lte: new Date() }
+  };
   
   // If a specific username is provided, filter by that username
   if (username) {
-    // If viewing own profile, show all posts
-    if (viewingOwnProfile && session?.user?.username === username) {
-      query = { username };
-    } else {
-      // Otherwise, show only publicly released posts for this user
-      query = {
-        username,
-        publicReleaseTime: { $lte: new Date() }
-      };
-    }
+    query.username = username;
   }
 
   // Get total count for pagination
