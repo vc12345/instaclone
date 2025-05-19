@@ -28,11 +28,13 @@ export async function GET(req) {
   }
 
   // Find users with the same school and matching the search query
+  // Exclude the current user from results
   const users = await db
     .collection("users")
     .find({ 
       name: { $regex: query, $options: "i" },
-      school: currentUser.school
+      school: currentUser.school,
+      email: { $ne: session.user.email } // Exclude current user
     })
     .project({ name: 1, username: 1, image: 1 })
     .limit(5)
