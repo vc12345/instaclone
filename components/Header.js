@@ -12,6 +12,7 @@ export default function Header() {
   const [showSearch, setShowSearch] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [isDirectSearch, setIsDirectSearch] = useState(false);
   const searchRef = useRef(null);
   const menuRef = useRef(null);
   const router = useRouter();
@@ -25,19 +26,46 @@ export default function Header() {
     return () => clearInterval(timer);
   }, []);
 
+  // Check if search term is a direct username lookup
+  useEffect(() => {
+    setIsDirectSearch(searchTerm.startsWith('@') && searchTerm.length > 1);
+  }, [searchTerm]);
+
   useEffect(() => {
     const delayDebounce = setTimeout(async () => {
       if (searchTerm.trim() && session) {
-        const res = await fetch(`/api/search-users?query=${searchTerm}`);
-        const users = await res.json();
-        setResults(users);
+        // Regular search
+        if (!isDirectSearch) {
+          const res = await fetch(`/api/search-users?query=${searchTerm}`);
+          const users = await res.json();
+          setResults(users);
+        }
       } else {
         setResults([]);
       }
     }, 300); // debounce
 
     return () => clearTimeout(delayDebounce);
-  }, [searchTerm, session]);
+  }, [searchTerm, session, isDirectSearch]);
+
+  // Handle direct username search
+  const handleDirectSearch = async () => {
+    if (!isDirectSearch || !searchTerm.trim()) return;
+    
+    const username = searchTerm.substring(1); // Remove @ symbol
+    const res = await fetch(`/api/search-users?directUsername=${username}`);
+    const users = await res.json();
+    
+    if (users.length > 0) {
+      // User exists, navigate to their profile
+      router.push(`/user/${users[0].username}`);
+      setSearchTerm("");
+      setShowSearch(false);
+    } else {
+      // User doesn't exist, clear search
+      setSearchTerm("");
+    }
+  };
 
   // Close search results when clicking outside
   useEffect(() => {
@@ -96,7 +124,7 @@ export default function Header() {
         {/* Search - Only shown to logged in users */}
         {session && (
           <div className="relative hidden md:block" ref={searchRef}>
-            <div className="relative">
+            <div className="relative flex">
               <input
                 type="text"
                 value={searchTerm}
@@ -105,8 +133,14 @@ export default function Header() {
                   setShowSearch(true);
                 }}
                 onFocus={() => setShowSearch(true)}
-                placeholder="User search"
+                placeholder={isDirectSearch ? "Enter exact username..." : "User search"}
                 className="bg-gray-100 rounded-lg py-1 px-3 text-sm w-64 focus:outline-none"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && isDirectSearch) {
+                    e.preventDefault();
+                    handleDirectSearch();
+                  }
+                }}
               />
               {searchTerm && (
                 <button
@@ -119,8 +153,16 @@ export default function Header() {
                   ✕
                 </button>
               )}
+              {isDirectSearch && (
+                <button
+                  onClick={handleDirectSearch}
+                  className="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm"
+                >
+                  Go
+                </button>
+              )}
             </div>
-            {showSearch && results.length > 0 && (
+            {showSearch && results.length > 0 && !isDirectSearch && (
               <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-md shadow-lg z-10 max-h-80 overflow-y-auto">
                 {results.map((user) => (
                   <a
@@ -147,8 +189,8 @@ export default function Header() {
                       )}
                     </div>
                     <div>
-                      <p className="font-medium">{user.username}</p>
-                      {user.name && <p className="text-sm text-gray-500">{user.name}</p>}
+                      {user.name && <p className="font-medium">{user.name}</p>}
+                      <p className="text-sm text-gray-500">@{user.username}</p>
                     </div>
                   </a>
                 ))}
@@ -277,7 +319,7 @@ export default function Header() {
       {/* Mobile Search - Only shown to logged in users */}
       {session && (
         <div className="md:hidden px-4 pb-3">
-          <div className="relative">
+          <div className="relative flex">
             <input
               type="text"
               value={searchTerm}
@@ -286,11 +328,25 @@ export default function Header() {
                 setShowSearch(true);
               }}
               onFocus={() => setShowSearch(true)}
-              placeholder="Search"
+              placeholder={isDirectSearch ? "Enter exact username..." : "Search"}
               className="bg-gray-100 rounded-lg py-1 px-3 text-sm w-full focus:outline-none"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && isDirectSearch) {
+                  e.preventDefault();
+                  handleDirectSearch();
+                }
+              }}
             />
+            {isDirectSearch && (
+              <button
+                onClick={handleDirectSearch}
+                className="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm"
+              >
+                Go
+              </button>
+            )}
           </div>
-          {showSearch && results.length > 0 && (
+          {showSearch && results.length > 0 && !isDirectSearch && (
             <div className="absolute left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-10 max-h-80 overflow-y-auto">
               {results.map((user) => (
                 <a
@@ -321,8 +377,8 @@ export default function Header() {
                     )}
                   </div>
                   <div>
-                    <p className="font-medium">{user.username}</p>
-                    {user.name && <p className="text-sm text-gray-500">{user.name}</p>}
+                    {user.name && <p className="font-medium">{user.name}</p>}
+                    <p className="text-sm text-gray-500">@{user.username}</p>
                   </div>
                 </a>
               ))}

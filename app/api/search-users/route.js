@@ -3,10 +3,12 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
 export async function GET(req) {
-  const query = new URL(req.url).searchParams.get("query");
+  const url = new URL(req.url);
+  const query = url.searchParams.get("query");
+  const directUsername = url.searchParams.get("directUsername");
   const session = await getServerSession(authOptions);
 
-  if (!query || !session) {
+  if (!session) {
     return new Response(JSON.stringify([]), {
       headers: { "Content-Type": "application/json" },
     });
@@ -15,6 +17,33 @@ export async function GET(req) {
   const client = await clientPromise;
   const db = client.db("instaclone");
   
+  // Direct username lookup (with @ symbol)
+  if (directUsername) {
+    const username = directUsername.startsWith('@') ? directUsername.substring(1) : directUsername;
+    
+    const user = await db.collection("users").findOne(
+      { username },
+      { projection: { name: 1, username: 1, image: 1 } }
+    );
+    
+    if (user) {
+      return new Response(JSON.stringify([user]), {
+        headers: { "Content-Type": "application/json" },
+      });
+    } else {
+      return new Response(JSON.stringify([]), {
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+  }
+  
+  // Regular search
+  if (!query) {
+    return new Response(JSON.stringify([]), {
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+
   // Get the current user's school
   const currentUser = await db.collection("users").findOne(
     { email: session.user.email },
