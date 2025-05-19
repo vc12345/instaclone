@@ -2,6 +2,19 @@
 import clientPromise from "@/lib/mongodb";
 import bcrypt from "bcrypt";
 
+// Function to generate camelCased username from a name
+function toCamelCase(name) {
+  return name
+    .toLowerCase()
+    .replace(/[^a-zA-Z0-9 ]/g, "") // remove special chars
+    .split(" ")
+    .filter(Boolean)
+    .map((word, index) =>
+      index === 0 ? word : word[0].toUpperCase() + word.slice(1)
+    )
+    .join("");
+}
+
 export async function POST(req) {
   const { email, password, name, username, school, yearOfReception } = await req.json();
   const client = await clientPromise;
@@ -18,7 +31,7 @@ export async function POST(req) {
   const yearMatches = allowed.yearOfReception.toString() === yearOfReception.toString();
   
   if (!schoolMatches && !yearMatches) {
-    return new Response("School or year of reception does not match your invitation.", { status: 403 });
+    return new Response("At least 1 of 'School' or 'Year of Reception' must match those provided by your referrer", { status: 403 });
   }
 
   // Check if email already exists
