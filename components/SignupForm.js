@@ -9,6 +9,7 @@ export default function SignupForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
+  const [username, setUsername] = useState("");
   const [school, setSchool] = useState("");
   const [schoolName, setSchoolName] = useState("");
   const [schoolPostcode, setSchoolPostcode] = useState("");
@@ -16,6 +17,7 @@ export default function SignupForm() {
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [schools, setSchools] = useState([]);
+  const [showUsernameHelp, setShowUsernameHelp] = useState(false);
   const router = useRouter();
 
   // Generate academic year options (YYYY/YY format) - limited to 10
@@ -57,7 +59,8 @@ export default function SignupForm() {
         body: JSON.stringify({ 
           email, 
           password, 
-          name, 
+          name,
+          username,
           school: finalSchool, 
           yearOfReception 
         }),
@@ -114,6 +117,28 @@ export default function SignupForm() {
             className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
             placeholder="Enter your name"
           />
+        </div>
+        
+        <div>
+          <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-1">
+            Username
+          </label>
+          <input
+            id="username"
+            type="text"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            onFocus={() => setShowUsernameHelp(true)}
+            onBlur={() => setShowUsernameHelp(false)}
+            required
+            className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            placeholder="Choose a unique username"
+          />
+          {showUsernameHelp && (
+            <p className="text-sm text-gray-600 mt-1">
+              Please choose a distinct username - your friends from other schools can find you only if you tell them your username.
+            </p>
+          )}
         </div>
         
         <div>
