@@ -254,18 +254,23 @@ export default function Home() {
     const date = new Date(dateString);
     const now = new Date();
     const seconds = Math.floor((now - date) / 1000);
+    const hours = Math.floor(seconds / 3600);
+    const days = Math.floor(hours / 24);
     
-    let interval = Math.floor(seconds / 3600);
-    if (interval >= 24) {
+    // More precise time display
+    if (days >= 2) {
+      return `${days} days ago`;
+    }
+    if (days === 1) {
       return "yesterday";
     }
-    if (interval >= 1) {
-      return `${interval} ${interval === 1 ? 'hour' : 'hours'} ago`;
+    if (hours >= 1) {
+      return `${hours} ${hours === 1 ? 'hour' : 'hours'} ago`;
     }
     
-    interval = Math.floor(seconds / 60);
-    if (interval >= 1) {
-      return `${interval} ${interval === 1 ? 'minute' : 'minutes'} ago`;
+    const minutes = Math.floor(seconds / 60);
+    if (minutes >= 1) {
+      return `${minutes} ${minutes === 1 ? 'minute' : 'minutes'} ago`;
     }
     
     return 'just now';
