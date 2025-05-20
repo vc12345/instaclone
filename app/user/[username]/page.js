@@ -10,7 +10,7 @@ import LayoutToggleServer from "@/components/LayoutToggleServer";
 import { postVisibility, layoutSettings } from "@/lib/config";
 import LikeButton from "@/components/LikeButton";
 import FakeLikeCounter from "@/components/FakeLikeCounter";
-import ImagePopup from "@/components/ImagePopup";
+import ProfileImagePopup from "@/components/ProfileImagePopup";
 
 export default async function UserProfile({ params, searchParams }) {
   try {
@@ -326,13 +326,12 @@ export default async function UserProfile({ params, searchParams }) {
 
         {/* Image Popup */}
         {selectedImageIndex >= 0 && (
-          <ImagePopup 
+          <ProfileImagePopup 
             posts={paginatedPosts} 
             initialIndex={selectedImageIndex} 
-            onClose={() => {
-              // This is a client component, so we need to use client-side navigation
-              window.location.href = `/user/${username}?layout=${layout}&page=${currentPage}`;
-            }} 
+            username={username}
+            layout={layout}
+            currentPage={currentPage}
           />
         )}
       </div>

@@ -464,7 +464,7 @@ export default function Home() {
                             </div>
                           </div>
                           <div>
-                            <h3 className="font-bold">{user.username}</h3>
+                            <h3 className="font-bold text-white">{user.username}</h3>
                             <p className="text-sm opacity-90">
                               {user.postCount} {user.postCount === 1 ? 'post' : 'posts'} recently
                             </p>
