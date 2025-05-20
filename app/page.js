@@ -297,10 +297,65 @@ export default function Home() {
     return (
       <div className="bg-gray-50 min-h-screen">
         <Header />
-        <div className="max-w-md mx-auto pt-8 px-4 pb-16">
-          <Suspense fallback={<div>Loading...</div>}>
-            <AuthTabs />
-          </Suspense>
+        <div className="max-w-5xl mx-auto pt-8 px-4 pb-16">
+          <div className="flex flex-col md:flex-row gap-8">
+            {/* Pitch Box */}
+            <div className="md:w-1/2 bg-gradient-to-br from-orange-600 via-pink-600 to-blue-700 text-white p-8 rounded-lg shadow-lg">
+              <div className="mb-6">
+                <h2 className="text-3xl font-bold mb-2 text-white">Why we built immie</h2>
+                <div className="w-16 h-1 bg-white rounded-full mb-6"></div>
+              </div>
+              
+              <div className="space-y-6">
+                <div className="flex items-start">
+                  <div className="bg-white bg-opacity-20 p-2 rounded-full mr-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-semibold mb-1 text-white">Safe Photo Sharing</h3>
+                    <p>A platform designed to help entrench safe photo-sharing habits from the ground up.</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-start">
+                  <div className="bg-white bg-opacity-20 p-2 rounded-full mr-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-semibold mb-1 text-white">No Addictive Features</h3>
+                    <p>We've eliminated the behavioral nudges that big social media platforms use to build addicted engagement.</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-start">
+                  <div className="bg-white bg-opacity-20 p-2 rounded-full mr-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-semibold mb-1 text-white">Intentional Design</h3>
+                    <p>Daily upload limits, scheduled releases, and a focus on quality over quantity create a healthier relationship with social media.</p>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="mt-8 pt-6 border-t border-white border-opacity-30">
+                <p className="font-medium text-lg">Join us in creating a better social media experience.</p>
+              </div>
+            </div>
+            
+            {/* Auth Form */}
+            <div className="md:w-1/2">
+              <Suspense fallback={<div>Loading...</div>}>
+                <AuthTabs />
+              </Suspense>
+            </div>
+          </div>
         </div>
       </div>
     );
