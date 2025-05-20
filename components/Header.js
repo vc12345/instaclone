@@ -112,7 +112,7 @@ export default function Header() {
         {/* Logo */}
         <div className="flex-shrink-0">
           <Link href="/" className="text-xl font-bold italic">
-            Instaclone
+            <span className="bg-gradient-to-r from-orange-200 via-pink-200 to-blue-200 text-transparent bg-clip-text">immie</span>
           </Link>
         </div>
 
