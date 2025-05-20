@@ -107,17 +107,17 @@ export default function Header() {
   };
 
   return (
-    <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
+    <header className="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm" style={{borderImage: "linear-gradient(to right, #ffa07a, #ffb6c1, #add8e6) 1"}}>
       <div className="max-w-5xl mx-auto px-4 sm:px-6 flex items-center justify-between h-16">
         {/* Logo */}
         <div className="flex-shrink-0">
-          <Link href="/" className="text-xl font-bold italic">
-            <span className="bg-gradient-to-r from-orange-200 via-pink-200 to-blue-200 text-transparent bg-clip-text">immie</span>
+          <Link href="/" className="text-3xl font-bold italic">
+            <span className="bg-gradient-to-r from-orange-400 via-pink-400 to-blue-500 text-transparent bg-clip-text drop-shadow-sm">immie</span>
           </Link>
         </div>
 
         {/* GMT Time */}
-        <div className="hidden md:block text-xs text-gray-500">
+        <div className="hidden md:block text-xs bg-gradient-to-r from-orange-300 via-pink-300 to-blue-300 bg-clip-text text-transparent">
           {currentTime.toUTCString()}
         </div>
 
@@ -134,7 +134,7 @@ export default function Header() {
                 }}
                 onFocus={() => setShowSearch(true)}
                 placeholder={isDirectSearch ? "Enter exact username..." : "User search"}
-                className="bg-gray-100 rounded-lg py-1 px-3 text-sm w-64 focus:outline-none"
+                className="bg-gray-100 rounded-lg py-1 px-3 text-sm w-64 focus:outline-none focus:ring-2 focus:ring-pink-200 border border-transparent"
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && isDirectSearch) {
                     e.preventDefault();
@@ -156,7 +156,7 @@ export default function Header() {
               {isDirectSearch && (
                 <button
                   onClick={handleDirectSearch}
-                  className="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm"
+                  className="ml-2 bg-gradient-to-r from-orange-400 via-pink-400 to-blue-500 hover:opacity-90 text-white px-3 py-1 rounded text-sm shadow-sm"
                 >
                   Go
                 </button>
@@ -203,17 +203,17 @@ export default function Header() {
         <nav className="flex items-center space-x-5">
           {session && (
             <>
-              <Link href="/" className="text-gray-800 hover:text-black">
+              <Link href="/" className="text-gray-800 hover:text-transparent hover:bg-gradient-to-r hover:from-orange-400 hover:via-pink-400 hover:to-blue-500 hover:bg-clip-text transition-colors">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
                 </svg>
               </Link>
-              <Link href="/my-posts" className="text-gray-800 hover:text-black">
+              <Link href="/my-posts" className="text-gray-800 hover:text-transparent hover:bg-gradient-to-r hover:from-orange-400 hover:via-pink-400 hover:to-blue-500 hover:bg-clip-text transition-colors">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v6m3-3H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </Link>
-              <Link href="/my-favorites" className="text-gray-800 hover:text-black">
+              <Link href="/my-favorites" className="text-gray-800 hover:text-transparent hover:bg-gradient-to-r hover:from-orange-400 hover:via-pink-400 hover:to-blue-500 hover:bg-clip-text transition-colors">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
                 </svg>
@@ -256,26 +256,26 @@ export default function Header() {
             )}
 
             {showMenu && (
-              <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-10 border border-gray-200">
+              <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-10 border border-gray-200" style={{borderImage: "linear-gradient(to right, #ffa07a, #ffb6c1, #add8e6) 1"}}>
                 {session ? (
                   <>
                     <Link 
                       href={`/user/${session.user.username}`}
-                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gradient-to-r hover:from-orange-50 hover:via-pink-50 hover:to-blue-50"
                       onClick={() => setShowMenu(false)}
                     >
                       Profile
                     </Link>
                     <Link 
                       href="/permit-users"
-                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gradient-to-r hover:from-orange-50 hover:via-pink-50 hover:to-blue-50"
                       onClick={() => setShowMenu(false)}
                     >
                       Permit New User
                     </Link>
                     <Link 
                       href="/viewing-history"
-                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gradient-to-r hover:from-orange-50 hover:via-pink-50 hover:to-blue-50"
                       onClick={() => setShowMenu(false)}
                     >
                       Viewing History
@@ -285,7 +285,7 @@ export default function Header() {
                         signOut({ callbackUrl: '/' });
                         setShowMenu(false);
                       }}
-                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gradient-to-r hover:from-orange-50 hover:via-pink-50 hover:to-blue-50"
                     >
                       Log Out
                     </button>
@@ -297,13 +297,13 @@ export default function Header() {
                         signIn();
                         setShowMenu(false);
                       }}
-                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gradient-to-r hover:from-orange-50 hover:via-pink-50 hover:to-blue-50"
                     >
                       Log In
                     </button>
                     <Link
                       href="/signup"
-                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gradient-to-r hover:from-orange-50 hover:via-pink-50 hover:to-blue-50"
                       onClick={() => setShowMenu(false)}
                     >
                       Sign Up
@@ -329,7 +329,7 @@ export default function Header() {
               }}
               onFocus={() => setShowSearch(true)}
               placeholder={isDirectSearch ? "Enter exact username..." : "Search"}
-              className="bg-gray-100 rounded-lg py-1 px-3 text-sm w-full focus:outline-none"
+              className="bg-gray-100 rounded-lg py-1 px-3 text-sm w-full focus:outline-none focus:ring-2 focus:ring-pink-200 border border-transparent"
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && isDirectSearch) {
                   e.preventDefault();
@@ -340,7 +340,7 @@ export default function Header() {
             {isDirectSearch && (
               <button
                 onClick={handleDirectSearch}
-                className="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm"
+                className="ml-2 bg-gradient-to-r from-orange-400 via-pink-400 to-blue-500 hover:opacity-90 text-white px-3 py-1 rounded text-sm shadow-sm"
               >
                 Go
               </button>
@@ -388,7 +388,7 @@ export default function Header() {
       )}
 
       {/* Mobile GMT Time */}
-      <div className="md:hidden text-center text-xs text-gray-500 pb-1">
+      <div className="md:hidden text-center text-xs pb-1 bg-gradient-to-r from-orange-300 via-pink-300 to-blue-300 bg-clip-text text-transparent">
         {currentTime.toUTCString()}
       </div>
     </header>
