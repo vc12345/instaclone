@@ -327,7 +327,7 @@ export default function Home() {
                   </div>
                   <div>
                     <h3 className="text-xl font-semibold mb-1 text-white">No Addictive Features</h3>
-                    <p>We've eliminated the behavioral nudges that big social media platforms use to build addicted engagement.</p>
+                    <p>We&apos;ve eliminated the behavioral nudges that big social media platforms use to build addicted engagement.</p>
                   </div>
                 </div>
                 
