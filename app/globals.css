@@ -28,7 +28,13 @@ body {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
-h1, h2, h3, h4, h5, h6 {
+/* Apply gradient to headings except those with text-white class */
+h1:not(.text-white), 
+h2:not(.text-white), 
+h3:not(.text-white), 
+h4:not(.text-white), 
+h5:not(.text-white), 
+h6:not(.text-white) {
   background: linear-gradient(to right, var(--accent-orange), var(--accent-pink), var(--accent-blue));
   -webkit-background-clip: text;
   background-clip: text;

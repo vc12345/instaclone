@@ -303,6 +303,7 @@ export default function Home() {
             <div className="md:w-1/2 bg-gradient-to-br from-orange-600 via-pink-600 to-blue-700 text-white p-8 rounded-lg shadow-lg">
               <div className="mb-6">
                 <h2 className="text-3xl font-bold mb-2 text-white">Why we built immie</h2>
+                <p className="text-white text-lg mb-2">For primary school children ages 5-12</p>
                 <div className="w-16 h-1 bg-white rounded-full mb-6"></div>
               </div>
               
@@ -314,8 +315,8 @@ export default function Home() {
                     </svg>
                   </div>
                   <div>
-                    <h3 className="text-xl font-semibold mb-1 text-white">Safe Photo Sharing</h3>
-                    <p>A platform designed to help entrench safe photo-sharing habits from the ground up.</p>
+                    <h3 className="text-xl font-semibold mb-1 text-white">School-Based Photo Sharing</h3>
+                    <p>Children can only search for and discover classmates from their own school, creating a safer, more familiar environment.</p>
                   </div>
                 </div>
                 
@@ -326,8 +327,8 @@ export default function Home() {
                     </svg>
                   </div>
                   <div>
-                    <h3 className="text-xl font-semibold mb-1 text-white">No Addictive Features</h3>
-                    <p>We&apos;ve eliminated the behavioral nudges that big social media platforms use to build addicted engagement.</p>
+                    <h3 className="text-xl font-semibold mb-1 text-white">Privacy By Design</h3>
+                    <p>Access to profiles from other schools requires knowing the exact username, protecting children from unwanted discovery.</p>
                   </div>
                 </div>
                 
@@ -338,14 +339,14 @@ export default function Home() {
                     </svg>
                   </div>
                   <div>
-                    <h3 className="text-xl font-semibold mb-1 text-white">Intentional Design</h3>
-                    <p>Daily upload limits, scheduled releases, and a focus on quality over quantity create a healthier relationship with social media.</p>
+                    <h3 className="text-xl font-semibold mb-1 text-white">Healthy Digital Habits</h3>
+                    <p>Daily upload limits and no addictive features help children develop healthy social media habits from an early age.</p>
                   </div>
                 </div>
               </div>
               
               <div className="mt-8 pt-6 border-t border-white border-opacity-30">
-                <p className="font-medium text-lg">Join us in creating a better social media experience.</p>
+                <p className="font-medium text-lg">A safer social media experience designed specifically for primary school children.</p>
               </div>
             </div>
             
