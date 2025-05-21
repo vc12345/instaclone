@@ -328,29 +328,54 @@ export default function Home() {
               <h2 className="text-xl font-semibold mb-4 text-white">Why we built immie</h2>
               
               <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-white mb-1">School-Based Photo Sharing</label>
-                  <p className="text-white text-opacity-90">Children can only search for and discover classmates from their own school, creating a safer, more familiar environment.</p>
+                <div className="flex">
+                  <div className="flex-shrink-0 w-5 h-5 mt-0.5 mr-2 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+                    <div className="w-2 h-2 bg-white rounded-full"></div>
+                  </div>
+                  <div>
+                    <h3 className="block text-base uppercase tracking-wide font-bold text-white mb-1">School-Based Photo Sharing</h3>
+                    <p className="text-white text-opacity-80 text-sm">Children can only search for and discover classmates from their own school, creating a safer, more familiar environment.</p>
+                  </div>
                 </div>
                 
-                <div>
-                  <label className="block text-sm font-medium text-white mb-1">Privacy By Design</label>
-                  <p className="text-white text-opacity-90">Access to profiles from other schools requires knowing the exact username, protecting children from unwanted discovery.</p>
+                <div className="flex">
+                  <div className="flex-shrink-0 w-5 h-5 mt-0.5 mr-2 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+                    <div className="w-2 h-2 bg-white rounded-full"></div>
+                  </div>
+                  <div>
+                    <h3 className="block text-base uppercase tracking-wide font-bold text-white mb-1">Privacy By Design</h3>
+                    <p className="text-white text-opacity-80 text-sm">Access to profiles from other schools requires knowing the exact username, protecting children from unwanted discovery.</p>
+                  </div>
                 </div>
                 
-                <div>
-                  <label className="block text-sm font-medium text-white mb-1">Healthy Digital Habits</label>
-                  <p className="text-white text-opacity-90">Daily upload limits and no addictive features help children develop healthy social media habits from an early age.</p>
+                <div className="flex">
+                  <div className="flex-shrink-0 w-5 h-5 mt-0.5 mr-2 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+                    <div className="w-2 h-2 bg-white rounded-full"></div>
+                  </div>
+                  <div>
+                    <h3 className="block text-base uppercase tracking-wide font-bold text-white mb-1">Healthy Digital Habits</h3>
+                    <p className="text-white text-opacity-80 text-sm">Daily upload limits and no addictive features help children develop healthy social media habits from an early age.</p>
+                  </div>
                 </div>
                 
-                <div>
-                  <label className="block text-sm font-medium text-white mb-1">What We&apos;ve Included</label>
-                  <p className="text-white text-opacity-90">Single daily content release, automatic image quality reduction, daily and total upload limits, and like counters with random values.</p>
+                <div className="flex">
+                  <div className="flex-shrink-0 w-5 h-5 mt-0.5 mr-2 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+                    <div className="w-2 h-2 bg-white rounded-full"></div>
+                  </div>
+                  <div>
+                    <h3 className="block text-base uppercase tracking-wide font-bold text-white mb-1">What We&apos;ve Included</h3>
+                    <p className="text-white text-opacity-80 text-sm">Single daily content release, automatic image quality reduction, daily and total upload limits, and like counters with random values.</p>
+                  </div>
                 </div>
                 
-                <div>
-                  <label className="block text-sm font-medium text-white mb-1">What We&apos;ve Excluded</label>
-                  <p className="text-white text-opacity-90">No AI, messaging, recommendations, push notifications, algorithmic feeds, infinite scrolling, image filters, follower counts, or streak counts.</p>
+                <div className="flex">
+                  <div className="flex-shrink-0 w-5 h-5 mt-0.5 mr-2 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+                    <div className="w-2 h-2 bg-white rounded-full"></div>
+                  </div>
+                  <div>
+                    <h3 className="block text-base uppercase tracking-wide font-bold text-white mb-1">What We&apos;ve Excluded</h3>
+                    <p className="text-white text-opacity-80 text-sm">No AI, messaging, recommendations, push notifications, algorithmic feeds, infinite scrolling, image filters, follower counts, or streak counts.</p>
+                  </div>
                 </div>
               </div>
               
