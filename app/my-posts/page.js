@@ -9,7 +9,7 @@ import OptimizedImage from "@/components/OptimizedImage";
 import ImagePopup from "@/components/ImagePopup";
 import FakeLikeCounter from "@/components/FakeLikeCounter";
 import { formatDate } from "@/lib/utils";
-import { layoutSettings } from "@/lib/config";
+import { layoutSettings, uploadLimits } from "@/lib/config";
 
 export default function MyPostsPage() {
   const { data: session, status } = useSession();
@@ -19,6 +19,7 @@ export default function MyPostsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [totalPages, setTotalPages] = useState(1);
   const [selectedImageIndex, setSelectedImageIndex] = useState(null);
+  const [totalPostCount, setTotalPostCount] = useState(0);
   
   const POSTS_PER_PAGE = useMemo(() => layout === 'grid' ? 9 : 3, [layout]);
 
@@ -35,6 +36,7 @@ export default function MyPostsPage() {
       setPosts(data.posts);
       setTotalPages(data.pagination.pages);
       setCurrentPage(data.pagination.page);
+      setTotalPostCount(data.pagination.total);
     } catch (error) {
       console.error("Error fetching posts:", error);
       setPosts([]);
@@ -225,9 +227,14 @@ export default function MyPostsPage() {
     <div className="bg-gray-50 min-h-screen">
       <Header />
       <div className="max-w-4xl mx-auto pt-8 px-4">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold">My Posts</h1>
-          <div className="flex items-center space-x-4">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
+          <div>
+            <h1 className="text-2xl font-bold">My Posts</h1>
+            <p className="text-sm text-gray-500 mt-1">
+              {totalPostCount} of {uploadLimits.maxTotalPosts} maximum posts
+            </p>
+          </div>
+          <div className="flex items-center space-x-4 mt-2 md:mt-0">
             {posts.length > 0 && (
               <LayoutToggle 
                 layout={layout} 
@@ -237,6 +244,24 @@ export default function MyPostsPage() {
             )}
           </div>
         </div>
+        
+        {totalPostCount >= uploadLimits.maxTotalPosts && (
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+            <div className="flex items-start">
+              <div className="flex-shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 text-yellow-600">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126z" />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <h3 className="text-sm font-medium text-yellow-800">Post limit reached</h3>
+                <p className="text-sm text-yellow-700 mt-1">
+                  You&apos;ve reached the maximum of {uploadLimits.maxTotalPosts} posts. To upload new posts, you&apos;ll need to delete some existing ones.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
         
         {posts.length === 0 ? (
           <div className="bg-white border border-gray-200 rounded-lg p-8 text-center">

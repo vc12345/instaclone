@@ -52,9 +52,49 @@ export async function POST(req) {
       }
     );
   }
+  
+  // Check total posts limit
+  const totalPostsCount = await db.collection("posts").countDocuments({
+    userEmail: session.user.email
+  });
+  
+  // Check if user has reached the total posts limit
+  const isAtTotalLimit = totalPostsCount >= uploadLimits.maxTotalPosts;
+  
+  // If at limit, check if the request includes confirmation to delete oldest post
+  const formData = await req.formData();
+  const confirmDeleteOldest = formData.get("confirmDeleteOldest") === "true";
+  
+  if (isAtTotalLimit && !confirmDeleteOldest) {
+    return new Response(
+      JSON.stringify({ 
+        error: "Total posts limit reached", 
+        message: `You've reached the maximum of ${uploadLimits.maxTotalPosts} posts. Uploading a new post will delete your oldest post.`,
+        requiresConfirmation: true,
+        totalLimit: uploadLimits.maxTotalPosts,
+        currentTotal: totalPostsCount
+      }), 
+      { 
+        status: 409, // Conflict
+        headers: { "Content-Type": "application/json" } 
+      }
+    );
+  }
+  
+  // If at limit and confirmed, delete the oldest post
+  if (isAtTotalLimit && confirmDeleteOldest) {
+    const oldestPost = await db.collection("posts")
+      .find({ userEmail: session.user.email })
+      .sort({ createdAt: 1 })
+      .limit(1)
+      .toArray();
+      
+    if (oldestPost.length > 0) {
+      await db.collection("posts").deleteOne({ _id: oldestPost[0]._id });
+    }
+  }
 
-  const data = await req.formData();
-  const file = data.get("image");
+  const file = formData.get("image");
 
   const bytes = await file.arrayBuffer();
   const buffer = Buffer.from(bytes);
@@ -100,7 +140,7 @@ export async function POST(req) {
   }
 
   await db.collection("posts").insertOne({
-    caption: data.get("caption"),
+    caption: formData.get("caption"),
     imageUrl: uploadResult.secure_url,
     createdAt: now,                // When the post was actually created
     publicReleaseTime: releaseDate, // When the post becomes publicly visible
@@ -112,7 +152,10 @@ export async function POST(req) {
     success: true,
     dailyLimit: uploadLimits.dailyLimit,
     todayUploads: todayPostsCount + 1,
-    remainingUploads: uploadLimits.dailyLimit - (todayPostsCount + 1)
+    remainingUploads: uploadLimits.dailyLimit - (todayPostsCount + 1),
+    totalPosts: isAtTotalLimit ? totalPostsCount : totalPostsCount + 1,
+    maxTotalPosts: uploadLimits.maxTotalPosts,
+    oldestDeleted: isAtTotalLimit && confirmDeleteOldest
   }), { 
     status: 200,
     headers: { "Content-Type": "application/json" }

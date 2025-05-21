@@ -58,13 +58,16 @@ export default function Home() {
   const [favorites, setFavorites] = useState([]);
   const [uploadStats, setUploadStats] = useState(null);
   const [uploadError, setUploadError] = useState(null);
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [totalPostCount, setTotalPostCount] = useState(0);
   const fileInputRef = useRef(null);
 
-  // Fetch user's upload stats
+  // Fetch user's upload stats and total post count
   const fetchUploadStats = useCallback(async () => {
     if (!session?.user?.email) return;
     
     try {
+      // Get daily upload stats
       const res = await fetch("/api/posts", {
         method: "HEAD",
       });
@@ -80,10 +83,16 @@ export default function Home() {
           remainingUploads
         });
       }
+      
+      // Get total post count
+      const postsRes = await fetch(`/api/posts?username=${session.user.username}&limit=1`);
+      const postsData = await postsRes.json();
+      setTotalPostCount(postsData.pagination.total);
+      
     } catch (error) {
       console.error("Error fetching upload stats:", error);
     }
-  }, [session?.user?.email]);
+  }, [session?.user?.email, session?.user?.username]);
 
   // Fetch user's favorites
   const fetchFavorites = useCallback(async () => {
@@ -197,6 +206,12 @@ export default function Home() {
     if (!session) return alert("Please log in first");
     if (!image) return alert("Please select an image");
 
+    // Check if we're at the post limit and need confirmation
+    if (totalPostCount >= uploadLimits.maxTotalPosts && !showConfirmation) {
+      setShowConfirmation(true);
+      return;
+    }
+
     setIsUploading(true);
     setUploadError(null);
     
@@ -204,6 +219,11 @@ export default function Home() {
       const formData = new FormData();
       formData.append("caption", caption);
       formData.append("image", image);
+      
+      // Add confirmation flag if needed
+      if (totalPostCount >= uploadLimits.maxTotalPosts) {
+        formData.append("confirmDeleteOldest", "true");
+      }
 
       const res = await fetch("/api/posts", {
         method: "POST",
@@ -220,6 +240,7 @@ export default function Home() {
       setCaption("");
       setImage(null);
       setImagePreview(null);
+      setShowConfirmation(false);
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
       }
@@ -230,6 +251,9 @@ export default function Home() {
         todayUploads: data.todayUploads,
         remainingUploads: data.remainingUploads
       });
+      
+      // Update total post count
+      setTotalPostCount(data.totalPosts);
       
       fetchRecentUsers(); // Refresh the list after posting
     } catch (error) {
@@ -369,7 +393,12 @@ export default function Home() {
       <main className="max-w-4xl mx-auto pt-6 pb-16 px-4">
         <div className="bg-white border border-gray-200 rounded-lg p-4 mb-6 shadow-sm">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg font-semibold">Create Post</h2>
+            <div>
+              <h2 className="text-lg font-semibold">Create Post</h2>
+              <p className="text-xs text-gray-500 mt-1">
+                {totalPostCount} of {uploadLimits.maxTotalPosts} maximum posts
+              </p>
+            </div>
             {uploadStats && (
               <div className="text-sm text-gray-500">
                 {uploadStats.remainingUploads > 0 ? (
@@ -392,6 +421,29 @@ export default function Home() {
                   </Link> to delete some posts before uploading more.
                 </p>
               )}
+            </div>
+          )}
+          
+          {showConfirmation && (
+            <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded mb-4">
+              <p className="font-medium">You&apos;ve reached the maximum of {uploadLimits.maxTotalPosts} posts</p>
+              <p className="mt-2">
+                Uploading a new post will delete your oldest post. Do you want to continue?
+              </p>
+              <div className="mt-3 flex space-x-3">
+                <button
+                  onClick={handleSubmit}
+                  className="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-1 rounded text-sm"
+                >
+                  Yes, upload and delete oldest
+                </button>
+                <button
+                  onClick={() => setShowConfirmation(false)}
+                  className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-1 rounded text-sm"
+                >
+                  Cancel
+                </button>
+              </div>
             </div>
           )}
           
@@ -455,9 +507,9 @@ export default function Home() {
             
             <button 
               type="submit" 
-              disabled={isUploading || !image || (uploadStats && uploadStats.remainingUploads <= 0)}
+              disabled={isUploading || !image || (uploadStats && uploadStats.remainingUploads <= 0) || showConfirmation}
               className={`w-full py-2 px-4 rounded-md font-medium ${
-                isUploading || !image || (uploadStats && uploadStats.remainingUploads <= 0)
+                isUploading || !image || (uploadStats && uploadStats.remainingUploads <= 0) || showConfirmation
                   ? "bg-blue-300 cursor-not-allowed"
                   : "bg-blue-500 hover:bg-blue-600"
               } text-white transition duration-200`}
