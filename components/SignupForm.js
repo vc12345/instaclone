@@ -3,7 +3,6 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import Link from "next/link";
-import { generateAcademicYears } from "@/lib/utils";
 
 export default function SignupForm() {
   const [email, setEmail] = useState("");
@@ -11,19 +10,13 @@ export default function SignupForm() {
   const [name, setName] = useState("");
   const [username, setUsername] = useState("");
   const [school, setSchool] = useState("");
-  const [schoolName, setSchoolName] = useState("");
-  const [schoolPostcode, setSchoolPostcode] = useState("");
-  const [yearOfReception, setYearOfReception] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [schools, setSchools] = useState([]);
   const [showUsernameHelp, setShowUsernameHelp] = useState(false);
   const router = useRouter();
 
-  // Generate academic year options (YYYY/YY format) - limited to 10
-  const academicYears = generateAcademicYears(1980, null, 10);
-
-  // Fetch distinct schools
+  // Fetch distinct schools from allowedEmails collection
   useEffect(() => {
     const fetchSchools = async () => {
       try {
@@ -47,11 +40,6 @@ export default function SignupForm() {
     setError("");
     setIsLoading(true);
     
-    // Format school name with postcode if custom school
-    const finalSchool = school === "other" 
-      ? `${schoolName} (${schoolPostcode})` 
-      : school;
-    
     try {
       const res = await fetch("/api/signup", {
         method: "POST",
@@ -61,8 +49,7 @@ export default function SignupForm() {
           password, 
           name,
           username,
-          school: finalSchool, 
-          yearOfReception 
+          school
         }),
       });
 
@@ -192,61 +179,6 @@ export default function SignupForm() {
             ) : (
               <option value="" disabled>Loading schools...</option>
             )}
-            <option value="other">School not in list</option>
-          </select>
-        </div>
-        
-        {school === "other" && (
-          <>
-            <div>
-              <label htmlFor="schoolName" className="block text-sm font-medium text-gray-700 mb-1">
-                School Name
-              </label>
-              <input
-                id="schoolName"
-                type="text"
-                value={schoolName}
-                onChange={(e) => setSchoolName(e.target.value)}
-                required
-                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                placeholder="eg. St Christopher's"
-              />
-            </div>
-            
-            <div>
-              <label htmlFor="schoolPostcode" className="block text-sm font-medium text-gray-700 mb-1">
-                School Postcode
-              </label>
-              <input
-                id="schoolPostcode"
-                type="text"
-                value={schoolPostcode}
-                onChange={(e) => setSchoolPostcode(e.target.value)}
-                required
-                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                placeholder="eg. NW3"
-              />
-            </div>
-          </>
-        )}
-        
-        <div>
-          <label htmlFor="yearOfReception" className="block text-sm font-medium text-gray-700 mb-1">
-            Year of Reception
-          </label>
-          <select
-            id="yearOfReception"
-            value={yearOfReception}
-            onChange={(e) => setYearOfReception(e.target.value)}
-            required
-            className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
-          >
-            <option value="">Select academic year</option>
-            {academicYears.map((year) => (
-              <option key={year} value={year}>
-                {year}
-              </option>
-            ))}
           </select>
         </div>
         

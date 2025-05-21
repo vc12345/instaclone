@@ -5,8 +5,8 @@ export async function GET() {
     const client = await clientPromise;
     const db = client.db("instaclone");
 
-    // Get distinct schools from users collection
-    const schools = await db.collection("users").distinct("school");
+    // Get distinct schools from allowedEmails collection instead of users
+    const schools = await db.collection("allowedEmails").distinct("school");
     
     // Sort alphabetically
     schools.sort();

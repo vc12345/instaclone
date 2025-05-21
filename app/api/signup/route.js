@@ -16,22 +16,18 @@ function toCamelCase(name) {
 }
 
 export async function POST(req) {
-  const { email, password, name, username, school, yearOfReception } = await req.json();
+  const { email, password, name, username, school } = await req.json();
   const client = await clientPromise;
   const db = client.db("instaclone");
 
-  // Check if email is allowed
-  const allowed = await db.collection("allowedEmails").findOne({ email });
-  if (!allowed) {
-    return new Response("Email is not allowed to register, or school name / reception year does not match referrer's input.", { status: 403 });
-  }
-
-  // Verify that either school or yearOfReception matches the allowed values
-  const schoolMatches = allowed.school === school;
-  const yearMatches = allowed.yearOfReception.toString() === yearOfReception.toString();
+  // Check if email is allowed and school matches
+  const allowed = await db.collection("allowedEmails").findOne({ 
+    email,
+    school
+  });
   
-  if (!schoolMatches && !yearMatches) {
-    return new Response("At least 1 of 'School' or 'Year of Reception' must match those provided by your referrer", { status: 403 });
+  if (!allowed) {
+    return new Response("Email is not allowed to register, or school name does not match.", { status: 403 });
   }
 
   // Check if email already exists
@@ -56,7 +52,6 @@ export async function POST(req) {
     name,
     username,
     school,
-    yearOfReception,
     createdAt: new Date(),
   });
 
