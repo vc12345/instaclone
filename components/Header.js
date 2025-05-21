@@ -31,7 +31,7 @@ export default function Header() {
 
   // Check if search term is a direct username lookup
   useEffect(() => {
-    setIsDirectSearch(searchTerm.startsWith('@') && searchTerm.length > 1);
+    setIsDirectSearch(searchTerm.startsWith('@'));
   }, [searchTerm]);
 
   useEffect(() => {
@@ -136,8 +136,8 @@ export default function Header() {
                   setShowSearch(true);
                 }}
                 onFocus={() => setShowSearch(true)}
-                placeholder={isDirectSearch ? "Enter exact username..." : "User search"}
-                className="bg-gray-100 rounded-lg py-1 px-3 text-sm w-64 focus:outline-none focus:ring-2 focus:ring-pink-200 border border-transparent"
+                placeholder={isDirectSearch ? "Enter exact username..." : "User search; type @ for redirection by username"}
+                className="bg-gray-100 rounded-lg py-1 px-3 text-sm w-80 focus:outline-none focus:ring-2 focus:ring-pink-200 border border-transparent"
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && isDirectSearch) {
                     e.preventDefault();
@@ -159,7 +159,7 @@ export default function Header() {
               {isDirectSearch && (
                 <button
                   onClick={handleDirectSearch}
-                  className="ml-2 bg-gradient-to-r from-orange-600 via-pink-600 to-blue-700 hover:opacity-90 text-white px-3 py-1 rounded text-sm shadow-sm"
+                  className="ml-2 bg-gradient-to-r from-orange-600 via-pink-600 to-blue-700 hover:opacity-90 text-white px-4 py-1.5 rounded text-sm font-medium shadow-sm"
                 >
                   Go
                 </button>
@@ -331,7 +331,7 @@ export default function Header() {
                 setShowSearch(true);
               }}
               onFocus={() => setShowSearch(true)}
-              placeholder={isDirectSearch ? "Enter exact username..." : "Search"}
+              placeholder={isDirectSearch ? "Enter exact username..." : "Search; type @ for redirection by username"}
               className="bg-gray-100 rounded-lg py-1 px-3 text-sm w-full focus:outline-none focus:ring-2 focus:ring-pink-200 border border-transparent"
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && isDirectSearch) {
@@ -343,7 +343,7 @@ export default function Header() {
             {isDirectSearch && (
               <button
                 onClick={handleDirectSearch}
-                className="ml-2 bg-gradient-to-r from-orange-600 via-pink-600 to-blue-700 hover:opacity-90 text-white px-3 py-1 rounded text-sm shadow-sm"
+                className="ml-2 bg-gradient-to-r from-orange-600 via-pink-600 to-blue-700 hover:opacity-90 text-white px-4 py-1.5 rounded text-sm font-medium shadow-sm"
               >
                 Go
               </button>
