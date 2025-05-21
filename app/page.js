@@ -375,7 +375,7 @@ export default function Home() {
                     </svg>
                   </div>
                   <div>
-                    <h3 className="text-xl font-semibold mb-1 text-white">What We've Included</h3>
+                    <h3 className="text-xl font-semibold mb-1 text-white">What We&apos;ve Included</h3>
                     <p>Single daily content release, automatic image quality reduction, daily and total upload limits, and like counters with random values.</p>
                   </div>
                 </div>
@@ -387,7 +387,7 @@ export default function Home() {
                     </svg>
                   </div>
                   <div>
-                    <h3 className="text-xl font-semibold mb-1 text-white">What We've Excluded</h3>
+                    <h3 className="text-xl font-semibold mb-1 text-white">What We&apos;ve Excluded</h3>
                     <p>No AI, messaging, recommendations, push notifications, algorithmic feeds, infinite scrolling, image filters, follower counts, or streak counts.</p>
                   </div>
                 </div>
@@ -581,7 +581,7 @@ export default function Home() {
                     {user.latestImage && (
                       <Image
                         src={user.latestImage}
-                        alt={`${user.username}'s latest post`}
+                        alt={`${user.username}&apos;s latest post`}
                         fill
                         sizes="(max-width: 768px) 100vw, 400px"
                         className="object-cover"
