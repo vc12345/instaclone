@@ -325,7 +325,7 @@ export default function Home() {
           <div className="flex flex-col md:flex-row gap-8">
             {/* Pitch Box */}
             <div className="md:w-1/2 bg-gradient-to-br from-orange-600 via-pink-600 to-blue-700 text-white p-6 rounded-lg shadow-lg">
-              <h2 className="text-xl font-semibold mb-4 text-white">Prepare your child against social media harm in Immie&apos;s protected environment</h2>
+              <h2 className="text-xl font-semibold mb-4 text-white">Why use immie</h2>
               
               <div className="space-y-4">
                 <div className="flex">
