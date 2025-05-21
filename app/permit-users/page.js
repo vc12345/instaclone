@@ -6,6 +6,22 @@ import Header from "@/components/Header";
 import { generateAcademicYears } from "@/lib/utils";
 import { formatDate } from "@/lib/utils";
 
+// Function to format school name properly
+const formatSchoolName = (name) => {
+  if (!name) return "";
+  
+  // Remove apostrophes
+  let formatted = name.replace(/'/g, "");
+  
+  // Convert to proper case (capitalize first letter of each word)
+  formatted = formatted.toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
+  
+  // Replace "Saint" with "St"
+  formatted = formatted.replace(/\bSaint\b/gi, "St");
+  
+  return formatted;
+};
+
 export default function PermitUsersPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
@@ -13,7 +29,7 @@ export default function PermitUsersPage() {
   const [school, setSchool] = useState("");
   const [customSchool, setCustomSchool] = useState("");
   const [schoolPostcode, setSchoolPostcode] = useState("");
-  const [yearOfReception, setYearOfReception] = useState("");
+  const [postcodeError, setPostcodeError] = useState("");
   const [schools, setSchools] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState(null);
@@ -64,17 +80,40 @@ export default function PermitUsersPage() {
     }
   }, [session, fetchPermittedUsers]);
 
+  // Handle postcode change with validation
+  const handlePostcodeChange = (e) => {
+    const value = e.target.value.toUpperCase();
+    setSchoolPostcode(value);
+    
+    if (value.length > 4) {
+      setPostcodeError("Please enter only the first part of the postcode (max 4 characters)");
+    } else {
+      setPostcodeError("");
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
     setMessage(null);
+    
+    // Validate postcode
+    if (school === "other" && schoolPostcode.length > 4) {
+      setPostcodeError("Please enter only the first part of the postcode (max 4 characters)");
+      return;
+    }
+    
     setIsLoading(true);
 
     try {
       // Format school name with postcode if custom school
-      const finalSchool = school === "other" 
-        ? `${customSchool} (${schoolPostcode})` 
-        : school;
+      let finalSchool;
+      if (school === "other") {
+        const formattedSchoolName = formatSchoolName(customSchool);
+        finalSchool = `${formattedSchoolName} (${schoolPostcode.toUpperCase()})`;
+      } else {
+        finalSchool = school;
+      }
       
       const res = await fetch("/api/permit-user", {
         method: "POST",
@@ -84,7 +123,6 @@ export default function PermitUsersPage() {
         body: JSON.stringify({
           email,
           school: finalSchool,
-          yearOfReception,
           referringUsername: session?.user?.username,
         }),
       });
@@ -95,7 +133,6 @@ export default function PermitUsersPage() {
         setSchool("");
         setCustomSchool("");
         setSchoolPostcode("");
-        setYearOfReception("");
         fetchPermittedUsers(); // Refresh the list
       } else {
         const data = await res.json();
@@ -202,40 +239,24 @@ export default function PermitUsersPage() {
                 
                 <div>
                   <label htmlFor="schoolPostcode" className="block text-sm font-medium text-gray-700 mb-1">
-                    School Postcode
+                    School Postcode (first part only)
                   </label>
                   <input
                     id="schoolPostcode"
                     type="text"
                     value={schoolPostcode}
-                    onChange={(e) => setSchoolPostcode(e.target.value)}
+                    onChange={handlePostcodeChange}
                     required
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    maxLength={4}
+                    className={`w-full border ${postcodeError ? 'border-red-300' : 'border-gray-300'} rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500`}
                     placeholder="eg. NW3"
                   />
+                  {postcodeError && (
+                    <p className="mt-1 text-sm text-red-600">{postcodeError}</p>
+                  )}
                 </div>
               </>
             )}
-
-            <div>
-              <label htmlFor="yearOfReception" className="block text-sm font-medium text-gray-700 mb-1">
-                Year of Reception
-              </label>
-              <select
-                id="yearOfReception"
-                value={yearOfReception}
-                onChange={(e) => setYearOfReception(e.target.value)}
-                required
-                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
-              >
-                <option value="">Select academic year</option>
-                {academicYears.map((year) => (
-                  <option key={year} value={year}>
-                    {year}
-                  </option>
-                ))}
-              </select>
-            </div>
 
             <button
               type="submit"
@@ -273,9 +294,6 @@ export default function PermitUsersPage() {
                       School
                     </th>
                     <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Year
-                    </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Date
                     </th>
                   </tr>
@@ -288,9 +306,6 @@ export default function PermitUsersPage() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {user.school}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {user.yearOfReception}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {formatDate(user.createdAt, { hour: undefined, minute: undefined })}

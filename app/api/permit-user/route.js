@@ -46,10 +46,10 @@ export async function POST(req) {
     });
   }
 
-  const { email, school, yearOfReception, referringUsername } = await req.json();
+  const { email, school, referringUsername } = await req.json();
 
   // Validate inputs
-  if (!email || !school || !yearOfReception) {
+  if (!email || !school) {
     return new Response(JSON.stringify({ message: "Missing required fields" }), { 
       status: 400,
       headers: { "Content-Type": "application/json" }
@@ -72,7 +72,6 @@ export async function POST(req) {
   await db.collection("allowedEmails").insertOne({
     email,
     school,
-    yearOfReception,
     referringUsername,
     createdAt: new Date()
   });
