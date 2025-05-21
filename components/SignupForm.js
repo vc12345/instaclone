@@ -102,7 +102,7 @@ export default function SignupForm() {
             onChange={(e) => setName(e.target.value)}
             required
             className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
-            placeholder="Enter your name"
+            placeholder="Enter your child's name"
           />
         </div>
         

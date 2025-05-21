@@ -33,7 +33,7 @@ export async function POST(req) {
   // Check if email already exists
   const existingEmail = await db.collection("users").findOne({ email });
   if (existingEmail) {
-    return new Response("Email already exists", { status: 400 });
+    return new Response("Email already exists. Please note: each child requires a distinct email address.", { status: 400 });
   }
 
   // Check if username already exists
