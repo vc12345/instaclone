@@ -324,38 +324,38 @@ export default function Home() {
         <div className="max-w-5xl mx-auto pt-8 px-4 pb-16">
           <div className="flex flex-col md:flex-row gap-8">
             {/* Pitch Box */}
-            <div className="md:w-1/2 bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
-              <h2 className="text-xl font-semibold mb-4">Why we built immie</h2>
+            <div className="md:w-1/2 bg-gradient-to-br from-orange-600 via-pink-600 to-blue-700 text-white p-6 rounded-lg shadow-lg">
+              <h2 className="text-xl font-semibold mb-4 text-white">Why we built immie</h2>
               
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">School-Based Photo Sharing</label>
-                  <p className="text-gray-600">Children can only search for and discover classmates from their own school, creating a safer, more familiar environment.</p>
+                  <label className="block text-sm font-medium text-white mb-1">School-Based Photo Sharing</label>
+                  <p className="text-white text-opacity-90">Children can only search for and discover classmates from their own school, creating a safer, more familiar environment.</p>
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Privacy By Design</label>
-                  <p className="text-gray-600">Access to profiles from other schools requires knowing the exact username, protecting children from unwanted discovery.</p>
+                  <label className="block text-sm font-medium text-white mb-1">Privacy By Design</label>
+                  <p className="text-white text-opacity-90">Access to profiles from other schools requires knowing the exact username, protecting children from unwanted discovery.</p>
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Healthy Digital Habits</label>
-                  <p className="text-gray-600">Daily upload limits and no addictive features help children develop healthy social media habits from an early age.</p>
+                  <label className="block text-sm font-medium text-white mb-1">Healthy Digital Habits</label>
+                  <p className="text-white text-opacity-90">Daily upload limits and no addictive features help children develop healthy social media habits from an early age.</p>
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">What We&apos;ve Included</label>
-                  <p className="text-gray-600">Single daily content release, automatic image quality reduction, daily and total upload limits, and like counters with random values.</p>
+                  <label className="block text-sm font-medium text-white mb-1">What We&apos;ve Included</label>
+                  <p className="text-white text-opacity-90">Single daily content release, automatic image quality reduction, daily and total upload limits, and like counters with random values.</p>
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">What We&apos;ve Excluded</label>
-                  <p className="text-gray-600">No AI, messaging, recommendations, push notifications, algorithmic feeds, infinite scrolling, image filters, follower counts, or streak counts.</p>
+                  <label className="block text-sm font-medium text-white mb-1">What We&apos;ve Excluded</label>
+                  <p className="text-white text-opacity-90">No AI, messaging, recommendations, push notifications, algorithmic feeds, infinite scrolling, image filters, follower counts, or streak counts.</p>
                 </div>
               </div>
               
-              <div className="mt-6 pt-4 border-t border-gray-200">
-                <p className="text-gray-700 font-medium">A safer social media experience designed specifically for school children.</p>
+              <div className="mt-6 pt-4 border-t border-white border-opacity-30">
+                <p className="font-medium text-white">A safer social media experience designed specifically for school children.</p>
               </div>
             </div>
             
