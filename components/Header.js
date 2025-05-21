@@ -17,11 +17,14 @@ export default function Header() {
   const menuRef = useRef(null);
   const router = useRouter();
 
-  // Update current time every minute
+  // Update current time every second
   useEffect(() => {
+    // Set time immediately to ensure it's accurate
+    setCurrentTime(new Date());
+    
     const timer = setInterval(() => {
       setCurrentTime(new Date());
-    }, 60000);
+    }, 1000);
     
     return () => clearInterval(timer);
   }, []);
