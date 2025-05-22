@@ -331,7 +331,7 @@ export default function Header() {
                 setShowSearch(true);
               }}
               onFocus={() => setShowSearch(true)}
-              placeholder={isDirectSearch ? "Enter exact username..." : "Search; type @ for redirection by username"}
+              placeholder={isDirectSearch ? "Enter exact username..." : "User search | type @ for redirection by username"}
               className="bg-gray-100 rounded-lg py-1 px-3 text-sm w-full focus:outline-none focus:ring-2 focus:ring-pink-200 border border-transparent"
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && isDirectSearch) {
