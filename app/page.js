@@ -328,6 +328,17 @@ export default function Home() {
               <h2 className="text-xl font-semibold mb-4 text-white">Why use immie</h2>
               
               <div className="space-y-4">
+                
+                <div className="flex">
+                  <div className="flex-shrink-0 w-5 h-5 mt-0.5 mr-2 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+                    <div className="w-2 h-2 bg-white rounded-full"></div>
+                  </div>
+                  <div>
+                    <h3 className="block text-base uppercase tracking-wide font-bold text-white mb-1">Referral-only user base</h3>
+                    <p className="text-white text-opacity-80 text-sm">Existing users become gatekeepers, and all referrals are recorded.</p>
+                  </div>
+                </div>
+                
                 <div className="flex">
                   <div className="flex-shrink-0 w-5 h-5 mt-0.5 mr-2 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
                     <div className="w-2 h-2 bg-white rounded-full"></div>
@@ -354,17 +365,7 @@ export default function Home() {
                   </div>
                   <div>
                     <h3 className="block text-base uppercase tracking-wide font-bold text-white mb-1">Healthy Digital Habits</h3>
-                    <p className="text-white text-opacity-80 text-sm">Daily upload limits and no addictive features help children develop healthy social media habits from an early age.</p>
-                  </div>
-                </div>
-                
-                <div className="flex">
-                  <div className="flex-shrink-0 w-5 h-5 mt-0.5 mr-2 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
-                    <div className="w-2 h-2 bg-white rounded-full"></div>
-                  </div>
-                  <div>
-                    <h3 className="block text-base uppercase tracking-wide font-bold text-white mb-1">What We&apos;ve Included</h3>
-                    <p className="text-white text-opacity-80 text-sm">Single daily content release, automatic image quality reduction, daily and total upload limits, and like counters with random values.</p>
+                    <p className="text-white text-opacity-80 text-sm">Anti-addiction features help children develop healthy social media habits and encourage parental involvement from an early age.</p>
                   </div>
                 </div>
                 
@@ -374,13 +375,23 @@ export default function Home() {
                   </div>
                   <div>
                     <h3 className="block text-base uppercase tracking-wide font-bold text-white mb-1">What We&apos;ve Excluded</h3>
-                    <p className="text-white text-opacity-80 text-sm">No AI, messaging, recommendations, push notifications, algorithmic feeds, infinite scrolling, image filters, follower counts, or streak counts.</p>
+                    <p className="text-white text-opacity-80 text-sm">AI, messaging, recommendations, push notifications, infinite scrolling, image filters, follower counts, streaks.</p>
+                  </div>
+                </div>
+
+                <div className="flex">
+                  <div className="flex-shrink-0 w-5 h-5 mt-0.5 mr-2 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+                    <div className="w-2 h-2 bg-white rounded-full"></div>
+                  </div>
+                  <div>
+                    <h3 className="block text-base uppercase tracking-wide font-bold text-white mb-1">What We&apos;ve Included</h3>
+                    <p className="text-white text-opacity-80 text-sm">Single daily content release, image quality reduction, upload limits, and random counter values.</p>
                   </div>
                 </div>
               </div>
               
               <div className="mt-6 pt-4 border-t border-white border-opacity-30">
-                <p className="font-medium text-white">A safer social media experience designed specifically for school children.</p>
+                <p className="font-medium text-white">A safer social media sandbox designed specifically for school children.</p>
               </div>
             </div>
             
