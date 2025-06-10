@@ -416,9 +416,6 @@ export default function Home() {
           <div className="flex justify-between items-center mb-4">
             <div>
               <h2 className="text-lg font-semibold">Create Post</h2>
-              <p className="text-xs text-gray-500 mt-1">
-                {totalPostCount} of {uploadLimits.maxTotalPosts} maximum posts
-              </p>
             </div>
             {uploadStats && (
               <div className="text-sm text-gray-500">
