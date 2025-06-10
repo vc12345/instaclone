@@ -182,10 +182,15 @@ export async function GET(req) {
   const client = await clientPromise;
   const db = client.db("instaclone");
 
-  let query = {
-    // Re-enable release time check for all queries
-    publicReleaseTime: { $lte: new Date() }
-  };
+  // Check if viewing own profile to determine if we should show scheduled posts
+  const viewingOwnProfile = url.searchParams.get("viewingOwnProfile") === "true";
+  
+  let query = {};
+  
+  // Only apply release time filter if not viewing own profile
+  if (!viewingOwnProfile) {
+    query.publicReleaseTime = { $lte: new Date() };
+  }
   
   // If a specific username is provided, filter by that username
   if (username) {
