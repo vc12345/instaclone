@@ -63,8 +63,7 @@ export default async function UserProfile({ params, searchParams }) {
 
         // Record this profile view if not viewing own profile
         // Only record when the page loads, not during interactions
-        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
-        await fetch(`${baseUrl}/api/viewing-history`, {
+        await fetch(`/api/viewing-history`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ viewedUsername: username }),
