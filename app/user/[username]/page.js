@@ -63,12 +63,20 @@ export default async function UserProfile({ params, searchParams }) {
 
         // Record this profile view if not viewing own profile
         // Only record when the page loads, not during interactions
-        await fetch(`/api/viewing-history`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ viewedUsername: username }),
-          cache: 'no-store'
-        });
+        try {
+          // Use absolute URL with the request's origin for server-side API calls
+          const protocol = process.env.NODE_ENV === 'production' ? 'https' : 'http';
+          const host = process.env.VERCEL_URL || 'localhost:3000';
+          await fetch(`${protocol}://${host}/api/viewing-history`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ viewedUsername: username }),
+            cache: 'no-store'
+          });
+        } catch (error) {
+          console.error("Error recording profile view:", error);
+          // Continue execution even if recording the view fails
+        }
       }
     } catch (sessionError) {
       console.error("Session error:", sessionError);
